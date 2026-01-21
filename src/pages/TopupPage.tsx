@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { ArrowLeft, CheckCircle, Loader2, UserCheck, XCircle, Shield, Zap, Sparkles, Wallet } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Loader2, UserCheck, XCircle, Shield, Zap, Sparkles, Wallet, AlertCircle } from 'lucide-react';
 import Header from '@/components/Header';
 import ModernPackageCard from '@/components/ModernPackageCard';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,7 @@ import { useGameIdCache } from '@/hooks/useGameIdCache';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface VerifiedUser {
   username: string;
@@ -26,6 +27,7 @@ const TopupPage: React.FC = () => {
   const navigate = useNavigate();
   const { games, paymentMethods, settings, isLoading } = useSite();
   const { addToCart } = useCart();
+  const { user } = useAuth();
   
   // Update favicon dynamically
   useFavicon(settings.siteIcon);
@@ -41,6 +43,7 @@ const TopupPage: React.FC = () => {
   const [selectedPayment, setSelectedPayment] = useState<string | null>(null);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [walletBalance, setWalletBalance] = useState<number>(0);
   
   // Verification states
   const [isVerifying, setIsVerifying] = useState(false);
@@ -54,6 +57,24 @@ const TopupPage: React.FC = () => {
       setServerId(cachedServerId);
     }
   }, [hasCachedData, cachedUserId, cachedServerId]);
+
+  // Fetch wallet balance when user is logged in
+  useEffect(() => {
+    const fetchWalletBalance = async () => {
+      if (!user) return;
+      try {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('wallet_balance')
+          .eq('user_id', user.id)
+          .single();
+        setWalletBalance(profile?.wallet_balance || 0);
+      } catch (error) {
+        console.error('Failed to fetch wallet balance:', error);
+      }
+    };
+    fetchWalletBalance();
+  }, [user]);
 
   // Show loading state while data is being fetched
   if (isLoading) {
@@ -920,7 +941,7 @@ const TopupPage: React.FC = () => {
     );
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!userId) {
       toast({ title: "Please enter your Game ID", variant: "destructive" });
       return;
@@ -946,6 +967,87 @@ const TopupPage: React.FC = () => {
                 game.specialPackages.find(p => p.id === selectedPackage);
     
     if (!pkg) return;
+
+    // Handle Wallet payment directly
+    if (selectedPayment === 'wallet') {
+      if (!user) {
+        toast({ title: "សូមចូលគណនីជាមុនសិន", description: "Please login to use wallet payment", variant: "destructive" });
+        navigate('/auth');
+        return;
+      }
+
+      // Check if wallet has enough balance
+      if (walletBalance < pkg.price) {
+        toast({ 
+          title: "សមតុល្យមិនគ្រប់គ្រាន់", 
+          description: `Your wallet balance ($${walletBalance.toFixed(2)}) is less than the package price ($${pkg.price.toFixed(2)}). Please top up your wallet first.`,
+          variant: "destructive" 
+        });
+        return;
+      }
+
+      setIsSubmitting(true);
+
+      try {
+        // Create order first
+        const { data: orderData, error: orderError } = await supabase.functions.invoke('process-topup', {
+          body: {
+            game_name: game.name,
+            package_name: pkg.name,
+            player_id: userId.trim(),
+            server_id: serverId.trim() || null,
+            player_name: verifiedUser.username,
+            amount: pkg.price,
+            currency: settings.packageCurrency || 'USD',
+            payment_method: 'Wallet',
+            g2bulk_product_id: pkg.g2bulkProductId || null,
+          },
+        });
+
+        if (orderError) throw orderError;
+        
+        const orderId = orderData?.order_id;
+        if (!orderId) throw new Error('Failed to create order');
+
+        // Deduct from wallet
+        const { data: walletResult, error: walletError } = await supabase.functions.invoke('wallet-topup', {
+          body: {
+            action: 'purchase',
+            amount: pkg.price,
+            orderId: orderId,
+          },
+        });
+
+        if (walletError) throw walletError;
+        if (walletResult?.error) throw new Error(walletResult.error);
+
+        // Update order status to paid
+        const { error: updateError } = await supabase
+          .from('topup_orders')
+          .update({ status: 'paid', payment_method: 'Wallet' })
+          .eq('id', orderId);
+
+        if (updateError) throw updateError;
+
+        toast({
+          title: "✓ បង់ប្រាក់បានជោគជ័យ!",
+          description: `Paid $${pkg.price.toFixed(2)} from wallet. New balance: $${walletResult.newBalance.toFixed(2)}`,
+        });
+
+        // Navigate to invoice
+        navigate(`/invoice/${orderId}`);
+      } catch (error: any) {
+        console.error('Wallet payment error:', error);
+        toast({
+          title: "កំហុសក្នុងការបង់ប្រាក់",
+          description: error.message || "Failed to process wallet payment",
+          variant: "destructive",
+        });
+      } finally {
+        setIsSubmitting(false);
+      }
+      return;
+    }
 
     const paymentMethod = paymentMethods.find(p => p.id === selectedPayment);
 
@@ -1003,6 +1105,18 @@ const TopupPage: React.FC = () => {
             <span>ត្រលប់ក្រោយ</span>
           </Link>
           
+          {/* Game Cover Image Banner */}
+          {game.coverImage && (
+            <div className="relative mb-6 overflow-hidden rounded-2xl">
+              <img 
+                src={game.coverImage} 
+                alt={`${game.name} cover`}
+                className="w-full h-48 sm:h-64 object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent" />
+            </div>
+          )}
+
           {/* Modern Game Header Card */}
           <div className="relative mb-8 overflow-hidden rounded-3xl bg-gradient-to-br from-card via-card to-card/80 border border-border/50">
             {/* Background Pattern */}
@@ -1204,11 +1318,11 @@ const TopupPage: React.FC = () => {
             </div>
             
             <div className="grid grid-cols-3 gap-3">
-              {/* Wallet Payment Option */}
+              {/* Wallet Payment Option with Balance */}
               <button
                 onClick={() => setSelectedPayment('wallet')}
                 className={cn(
-                  "p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2",
+                  "p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 relative",
                   "hover:scale-[1.02] active:scale-[0.98]",
                   selectedPayment === 'wallet'
                     ? "border-emerald-500 bg-emerald-500/10 shadow-lg shadow-emerald-500/10"
@@ -1219,6 +1333,14 @@ const TopupPage: React.FC = () => {
                   <Wallet className="w-5 h-5 text-white" />
                 </div>
                 <span className="text-xs font-medium">Wallet</span>
+                {user && (
+                  <span className={cn(
+                    "text-[10px] font-bold",
+                    walletBalance > 0 ? "text-emerald-400" : "text-muted-foreground"
+                  )}>
+                    ${walletBalance.toFixed(2)}
+                  </span>
+                )}
                 {selectedPayment === 'wallet' && (
                   <CheckCircle className="w-4 h-4 text-emerald-500" />
                 )}
