@@ -1105,65 +1105,53 @@ const TopupPage: React.FC = () => {
             <span>ត្រលប់ក្រោយ</span>
           </Link>
           
-          {/* Game Cover Image Banner */}
-          {game.coverImage && (
-            <div className="relative mb-6 overflow-hidden rounded-2xl">
-              <img 
-                src={game.coverImage} 
-                alt={`${game.name} cover`}
-                className="w-full h-48 sm:h-64 object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent" />
-            </div>
-          )}
-
-          {/* Modern Game Header Card */}
-          <div className="relative mb-8 overflow-hidden rounded-3xl bg-gradient-to-br from-card via-card to-card/80 border border-border/50">
-            {/* Background Pattern */}
-            <div className="absolute inset-0 opacity-5">
-              <div className="absolute inset-0" style={{
-                backgroundImage: 'radial-gradient(circle at 2px 2px, currentColor 1px, transparent 1px)',
-                backgroundSize: '24px 24px'
-              }} />
-            </div>
-            
-            {/* Banner gradient overlay */}
-            <div 
-              className="absolute inset-0 bg-gradient-to-r from-gold/10 via-transparent to-gold/5"
-              style={{
-                backgroundImage: settings.topupBannerImage ? `url(${settings.topupBannerImage})` : undefined,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center'
-              }}
-            />
-            
-            <div className="relative p-6 sm:p-8 flex items-center gap-4 sm:gap-6">
-              {/* Game Image */}
-              <div className="relative">
+          {/* Hero Section - Cover Image with Overlapping Game Info */}
+          <div className="relative mb-8 rounded-2xl overflow-hidden">
+            {/* Cover Image */}
+            <div className="relative w-full h-40 sm:h-52 md:h-64">
+              {game.coverImage ? (
                 <img 
-                  src={game.image} 
-                  alt={game.name}
-                  className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-cover border-2 border-gold/50 shadow-lg"
+                  src={game.coverImage} 
+                  alt={`${game.name} cover`}
+                  className="w-full h-full object-cover"
                 />
-                <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center border-2 border-card">
-                  <Zap className="w-4 h-4 text-white" />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-gold/20 via-background to-gold/10" />
+              )}
+              {/* Gradient overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-card via-card/40 to-transparent" />
+            </div>
+            
+            {/* Overlapping Game Info */}
+            <div className="relative -mt-12 sm:-mt-14 px-4 sm:px-6 pb-4 sm:pb-6">
+              <div className="flex items-end gap-3 sm:gap-4">
+                {/* Game Icon */}
+                <div className="relative shrink-0">
+                  <img 
+                    src={game.image} 
+                    alt={game.name}
+                    className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl sm:rounded-2xl object-cover border-3 sm:border-4 border-card shadow-xl"
+                  />
+                  <div className="absolute -bottom-1 -right-1 sm:-bottom-2 sm:-right-2 w-6 h-6 sm:w-8 sm:h-8 bg-emerald-500 rounded-full flex items-center justify-center border-2 border-card shadow-md">
+                    <Zap className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
+                  </div>
                 </div>
-              </div>
-              
-              {/* Game Info */}
-              <div className="flex-1">
-                <h1 className="font-display text-2xl sm:text-3xl font-bold mb-2 gold-text">
-                  {game.name}
-                </h1>
-                <div className="flex flex-wrap gap-2">
-                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-medium">
-                    <Shield className="w-3 h-3" />
-                    Secure
-                  </span>
-                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-gold/20 text-gold text-xs font-medium">
-                    <Zap className="w-3 h-3" />
-                    Instant
-                  </span>
+                
+                {/* Game Name & Badges */}
+                <div className="flex-1 min-w-0 pb-1">
+                  <h1 className="font-display text-xl sm:text-2xl md:text-3xl font-bold mb-1.5 sm:mb-2 gold-text truncate">
+                    {game.name}
+                  </h1>
+                  <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 sm:py-1 rounded-full bg-emerald-500/20 text-emerald-400 text-[10px] sm:text-xs font-medium backdrop-blur-sm">
+                      <Shield className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                      Safety guarantees
+                    </span>
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 sm:py-1 rounded-full bg-gold/20 text-gold text-[10px] sm:text-xs font-medium backdrop-blur-sm">
+                      <Zap className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                      Instant Top-up
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
