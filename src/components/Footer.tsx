@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { useSite } from '@/contexts/SiteContext';
 
 interface FooterProps {
@@ -62,9 +63,13 @@ const Footer: React.FC<FooterProps> = ({
               <ul className="space-y-1 sm:space-y-2">
                 {games.slice(0, 5).map(game => (
                   <li key={game.id}>
-                    <span className="text-xs sm:text-sm opacity-80 hover:opacity-100 cursor-pointer uppercase" style={{ color: textColor }}>
+                    <Link 
+                      to={`/topup/${game.id}`}
+                      className="text-xs sm:text-sm opacity-80 hover:opacity-100 transition-opacity uppercase" 
+                      style={{ color: textColor }}
+                    >
                       {game.name}
-                    </span>
+                    </Link>
                   </li>
                 ))}
               </ul>
