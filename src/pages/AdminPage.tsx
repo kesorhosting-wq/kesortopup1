@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Settings, Package, CreditCard, Palette, Plus, Trash2, Edit2, LogOut, User, Save, X, ChevronDown, ChevronUp, DollarSign, Home, ArrowUp, ArrowDown, Key, ShoppingCart, QrCode, Link2, Link2Off, Shield, RefreshCw } from 'lucide-react';
+import { ArrowLeft, Settings, Package, CreditCard, Palette, Plus, Trash2, Edit2, LogOut, User, Save, X, ChevronDown, ChevronUp, DollarSign, Home, ArrowUp, ArrowDown, Key, ShoppingCart, QrCode, Link2, Link2Off, Shield, RefreshCw, Copy, Star } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -1949,6 +1949,30 @@ const AdminPage: React.FC = () => {
                                           <Button 
                                             variant="ghost" 
                                             size="icon"
+                                            className="h-7 w-7 text-orange-500 hover:text-orange-600 hover:bg-orange-500/10"
+                                            title="Clone to Special Package"
+                                            onClick={async () => {
+                                              await addSpecialPackage(game.id, {
+                                                name: pkg.name,
+                                                amount: pkg.amount,
+                                                price: pkg.price,
+                                                currency: pkg.currency,
+                                                icon: pkg.icon || undefined,
+                                                label: pkg.label || undefined,
+                                                labelBgColor: pkg.labelBgColor || undefined,
+                                                labelTextColor: pkg.labelTextColor || undefined,
+                                                labelIcon: pkg.labelIcon || undefined,
+                                                g2bulkProductId: pkg.g2bulkProductId || undefined,
+                                                g2bulkTypeId: pkg.g2bulkTypeId || undefined
+                                              });
+                                              toast({ title: "Cloned to Special Packages!", description: `${pkg.name} has been added to Special Packages` });
+                                            }}
+                                          >
+                                            <Star className="w-3 h-3" />
+                                          </Button>
+                                          <Button 
+                                            variant="ghost" 
+                                            size="icon"
                                             className="h-7 w-7 text-destructive hover:text-destructive"
                                             onClick={async () => {
                                               await deletePackage(game.id, pkg.id);
@@ -2232,6 +2256,30 @@ const AdminPage: React.FC = () => {
                                             onClick={() => handleStartEditSpecialPackage(pkg)}
                                           >
                                             <Edit2 className="w-3 h-3" />
+                                          </Button>
+                                          <Button 
+                                            variant="ghost" 
+                                            size="icon"
+                                            className="h-7 w-7 text-gold hover:text-gold-dark hover:bg-gold/10"
+                                            title="Clone to Normal Package"
+                                            onClick={async () => {
+                                              await addPackage(game.id, {
+                                                name: pkg.name,
+                                                amount: pkg.amount,
+                                                price: pkg.price,
+                                                currency: pkg.currency,
+                                                icon: pkg.icon || undefined,
+                                                label: pkg.label || undefined,
+                                                labelBgColor: pkg.labelBgColor || undefined,
+                                                labelTextColor: pkg.labelTextColor || undefined,
+                                                labelIcon: pkg.labelIcon || undefined,
+                                                g2bulkProductId: pkg.g2bulkProductId || undefined,
+                                                g2bulkTypeId: pkg.g2bulkTypeId || undefined
+                                              });
+                                              toast({ title: "Cloned to Normal Packages!", description: `${pkg.name} has been added to Normal Packages` });
+                                            }}
+                                          >
+                                            <Package className="w-3 h-3" />
                                           </Button>
                                           <Button 
                                             variant="ghost" 
