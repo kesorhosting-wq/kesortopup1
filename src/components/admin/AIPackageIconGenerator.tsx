@@ -156,6 +156,9 @@ export const AIBulkPackageIconGenerator: React.FC<AIBulkPackageIconGeneratorProp
     let successCount = 0;
     let failCount = 0;
 
+    let consecutiveRateLimits = 0;
+    const MAX_RATE_LIMIT_RETRIES = 5;
+
     for (let i = 0; i < packagesWithoutIcons.length; i++) {
       // Check if paused
       while (pauseRef.current) {
@@ -184,19 +187,38 @@ export const AIBulkPackageIconGenerator: React.FC<AIBulkPackageIconGeneratorProp
 
         if (error || !data?.success) {
           failCount++;
-          console.error(`Failed for ${pkg.gameName} - ${pkg.packageName}:`, error || data?.error);
+          const errorMsg = data?.error || error?.message || '';
+          console.error(`Failed for ${pkg.gameName} - ${pkg.packageName}:`, errorMsg);
           
-          // Handle rate limiting
-          if (data?.error?.includes('Rate limit') || error?.message?.includes('429')) {
+          // Handle rate limiting with exponential backoff
+          if (errorMsg.includes('Rate limit') || errorMsg.includes('429') || errorMsg.includes('quota')) {
+            consecutiveRateLimits++;
+            
+            if (consecutiveRateLimits >= MAX_RATE_LIMIT_RETRIES) {
+              toast({ 
+                title: "⏰ Quota exhausted", 
+                description: "Gemini API daily quota reached. Please try again tomorrow or upgrade your API plan.",
+                variant: "destructive" 
+              });
+              break;
+            }
+            
+            // Exponential backoff: 30s, 60s, 90s, 120s...
+            const waitTime = 30 * consecutiveRateLimits;
             toast({ 
-              title: "Rate limited", 
-              description: "Waiting 30 seconds before continuing...",
+              title: "⏳ Rate limited", 
+              description: `Waiting ${waitTime} seconds before retrying... (${consecutiveRateLimits}/${MAX_RATE_LIMIT_RETRIES})`,
               variant: "destructive" 
             });
-            await new Promise(resolve => setTimeout(resolve, 30000));
+            await new Promise(resolve => setTimeout(resolve, waitTime * 1000));
+            
+            // Retry this package
+            i--;
+            continue;
           }
         } else {
           successCount++;
+          consecutiveRateLimits = 0; // Reset on success
         }
       } catch (err: any) {
         failCount++;
@@ -212,8 +234,8 @@ export const AIBulkPackageIconGenerator: React.FC<AIBulkPackageIconGeneratorProp
         }
       }
 
-      // Delay between requests to avoid rate limiting (3 seconds)
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      // Delay between requests to avoid rate limiting (15 seconds for free tier)
+      await new Promise(resolve => setTimeout(resolve, 15000));
     }
 
     setIsGenerating(false);
