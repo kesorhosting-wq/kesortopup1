@@ -9,8 +9,8 @@ interface FeaturedGamesSectionProps {
 }
 
 const FeaturedGamesSection: React.FC<FeaturedGamesSectionProps> = ({ games }) => {
-  // Filter games that have special packages
-  const featuredGames = games.filter(game => game.specialPackages.length > 0).slice(0, 4);
+  // Filter games marked as featured by admin
+  const featuredGames = games.filter(game => game.featured).slice(0, 8);
   
   if (featuredGames.length === 0) return null;
   
