@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { ArrowLeft, CheckCircle, Loader2, UserCheck, XCircle } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Loader2, UserCheck, XCircle, Shield, Zap, Sparkles } from 'lucide-react';
 import Header from '@/components/Header';
-import PackageCard from '@/components/PackageCard';
-import KhmerFrame from '@/components/KhmerFrame';
+import ModernPackageCard from '@/components/ModernPackageCard';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useSite } from '@/contexts/SiteContext';
@@ -997,188 +996,192 @@ const TopupPage: React.FC = () => {
       >
         <Header />
         
-        <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 max-w-2xl">
+        <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 max-w-4xl">
           {/* Back button */}
-          <Link to="/" className="inline-flex items-center gap-2 text-sm sm:text-base text-muted-foreground hover:text-foreground mb-4 sm:mb-6 transition-colors">
-            <ArrowLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+          <Link to="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4 transition-colors">
+            <ArrowLeft className="w-4 h-4" />
             <span>ត្រលប់ក្រោយ</span>
           </Link>
           
-          {/* Game Header */}
-          <KhmerFrame variant="gold" className="mb-6 sm:mb-8">
+          {/* Modern Game Header Card */}
+          <div className="relative mb-8 overflow-hidden rounded-3xl bg-gradient-to-br from-card via-card to-card/80 border border-border/50">
+            {/* Background Pattern */}
+            <div className="absolute inset-0 opacity-5">
+              <div className="absolute inset-0" style={{
+                backgroundImage: 'radial-gradient(circle at 2px 2px, currentColor 1px, transparent 1px)',
+                backgroundSize: '24px 24px'
+              }} />
+            </div>
+            
+            {/* Banner gradient overlay */}
             <div 
-              className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4"
+              className="absolute inset-0 bg-gradient-to-r from-gold/10 via-transparent to-gold/5"
               style={{
                 backgroundImage: settings.topupBannerImage ? `url(${settings.topupBannerImage})` : undefined,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center'
               }}
-            >
-              <img 
-                src={game.image} 
-                alt={game.name}
-                className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl object-cover border-2"
-                style={{ borderColor: settings.topupBannerColor || 'hsl(43 74% 49%)' }}
-              />
-              <h1 
-                className="font-display text-xl sm:text-2xl font-bold"
-                style={{ color: settings.topupBannerColor || 'hsl(43 74% 49%)' }}
-              >
-                {game.name}
-              </h1>
-            </div>
-          </KhmerFrame>
-          
-          {/* Step 1: Enter ID */}
-          <div 
-            className="mb-6 sm:mb-8 p-4 sm:p-6 rounded-lg relative"
-            style={{
-              backgroundColor: settings.idSectionBgColor || 'hsl(39 40% 88%)',
-              backgroundImage: settings.idSectionBgImage ? `url(${settings.idSectionBgImage})` : undefined,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-              color: settings.idSectionTextColor || undefined
-            }}
-          >
-            {/* Flower ornaments - smaller on mobile */}
-            <img 
-              src="/assets/romdoul-flower.png" 
-              alt="" 
-              className="absolute -top-2 sm:-top-4 -left-2 sm:-left-4 w-16 sm:w-24 h-16 sm:h-24 object-contain pointer-events-none"
-              style={{ transform: 'scaleX(-1)' }}
-            />
-            <img 
-              src="/assets/romdoul-flower.png" 
-              alt="" 
-              className="absolute -top-2 sm:-top-4 -right-2 sm:-right-4 w-16 sm:w-24 h-16 sm:h-24 object-contain pointer-events-none"
             />
             
-            {/* Header with number */}
-            <div className="flex items-center justify-center gap-2 sm:gap-3 mb-4 sm:mb-6">
-              <span 
-                className="w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center font-bold text-xs sm:text-sm"
-                style={{ 
-                  backgroundColor: settings.frameColor || 'hsl(43 74% 49%)',
-                  color: 'hsl(var(--primary-foreground))'
-                }}
-              >1</span>
-              <h2 className="font-khmer text-base sm:text-xl font-bold" style={{ color: settings.frameColor || 'hsl(30 30% 35%)' }}>
-                សុំបញ្ចូល ID របស់អ្នក
-              </h2>
+            <div className="relative p-6 sm:p-8 flex items-center gap-4 sm:gap-6">
+              {/* Game Image */}
+              <div className="relative">
+                <img 
+                  src={game.image} 
+                  alt={game.name}
+                  className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-cover border-2 border-gold/50 shadow-lg"
+                />
+                <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center border-2 border-card">
+                  <Zap className="w-4 h-4 text-white" />
+                </div>
+              </div>
+              
+              {/* Game Info */}
+              <div className="flex-1">
+                <h1 className="font-display text-2xl sm:text-3xl font-bold mb-2 gold-text">
+                  {game.name}
+                </h1>
+                <div className="flex flex-wrap gap-2">
+                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-medium">
+                    <Shield className="w-3 h-3" />
+                    Secure
+                  </span>
+                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-gold/20 text-gold text-xs font-medium">
+                    <Zap className="w-3 h-3" />
+                    Instant
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Step 1: Enter ID - Modern Card Style */}
+          <div className="mb-8 p-6 rounded-2xl bg-gradient-to-br from-card via-card to-card/80 border border-border/50 relative overflow-hidden">
+            {/* Decorative Elements */}
+            <div className="absolute top-0 right-0 w-32 h-32 bg-gold/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+            <div className="absolute bottom-0 left-0 w-24 h-24 bg-emerald-500/5 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2" />
+            
+            {/* Header */}
+            <div className="flex items-center gap-3 mb-6 relative">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-gold to-gold-dark flex items-center justify-center text-primary-foreground font-bold shadow-lg">
+                1
+              </div>
+              <div>
+                <h2 className="font-bold text-lg">Enter Your ID</h2>
+                <p className="text-xs text-muted-foreground">សុំបញ្ចូល ID របស់អ្នក</p>
+              </div>
             </div>
             
             {/* Dynamic ID inputs based on game */}
-            <div className="mb-4">
+            <div className="mb-4 relative">
               {renderIdInputs()}
             </div>
             
             {/* Verification Status Display */}
             {verifiedUser && (
-              <div className="bg-green-100 border border-green-400 rounded-lg p-3 sm:p-4 mb-4">
-                <div className="flex items-center gap-2 text-green-700">
+              <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-4 mb-4">
+                <div className="flex items-center gap-2 text-emerald-400">
                   <UserCheck className="w-5 h-5" />
-                  <span className="font-bold text-sm sm:text-base">ផ្ទៀងផ្ទាត់ដោយជោគជ័យ!</span>
+                  <span className="font-bold">Verified Successfully!</span>
                 </div>
-                <div className="mt-2 text-green-800">
-                  <p className="text-sm sm:text-base break-all font-unicode">
-                    <strong>Username:</strong>{' '}
-                    <span className="font-semibold">{verifiedUser.username}</span>
+                <div className="mt-2 text-emerald-300/80 text-sm">
+                  <p className="break-all">
+                    <strong>Username:</strong> {verifiedUser.username}
                   </p>
-                  <p className="text-sm sm:text-base"><strong>ID:</strong> {verifiedUser.id}</p>
+                  <p><strong>ID:</strong> {verifiedUser.id}</p>
                   {verifiedUser.serverId && (
-                    <p className="text-sm sm:text-base"><strong>Server:</strong> {verifiedUser.serverId}</p>
+                    <p><strong>Server:</strong> {verifiedUser.serverId}</p>
                   )}
                 </div>
               </div>
             )}
 
             {verificationError && (
-              <div className="bg-red-100 border border-red-400 rounded-lg p-3 sm:p-4 mb-4">
-                <div className="flex items-center gap-2 text-red-700">
+              <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 mb-4">
+                <div className="flex items-center gap-2 text-red-400">
                   <XCircle className="w-5 h-5" />
-                  <span className="text-sm sm:text-base">{verificationError}</span>
+                  <span className="text-sm">{verificationError}</span>
                 </div>
               </div>
             )}
 
             {!verifiedUser && (
-              <p className="text-xs sm:text-sm mt-3 sm:mt-4" style={{ color: settings.frameColor || 'hsl(30 30% 35%)' }}>
-                បញ្ចូល ID ហើយចុច "ផ្ទៀងផ្ទាត់" ដើម្បីពិនិត្យ
+              <p className="text-xs text-muted-foreground mt-3">
+                Enter your ID and click "Verify" to continue
               </p>
             )}
             
             {/* Verify Button */}
-            <div className="flex justify-center mt-4 sm:mt-6">
+            <div className="flex justify-center mt-6 relative">
               <Button 
                 onClick={handleVerify}
                 disabled={isVerifying || !userId.trim() || !!verifiedUser}
-                variant="outline" 
                 className={cn(
-                  "rounded-full px-6 sm:px-8 py-2 sm:py-3 h-auto flex items-center gap-2 text-sm sm:text-base font-bold transition-all",
+                  "rounded-xl px-8 py-3 h-auto flex items-center gap-2 font-bold transition-all",
                   verifiedUser 
-                    ? "bg-green-500 text-white border-green-500 hover:bg-green-500" 
-                    : "bg-white/90 hover:bg-white"
+                    ? "bg-emerald-500 hover:bg-emerald-600 text-white" 
+                    : "bg-gradient-to-r from-gold to-gold-dark hover:from-gold-dark hover:to-gold text-primary-foreground"
                 )}
-                style={!verifiedUser ? {
-                  borderColor: settings.frameColor || 'hsl(43 74% 49%)',
-                  color: settings.frameColor || 'hsl(30 30% 35%)'
-                } : undefined}
               >
                 {isVerifying ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    <span className="font-khmer">កំពុងផ្ទៀងផ្ទាត់...</span>
+                    <span>Verifying...</span>
                   </>
                 ) : verifiedUser ? (
                   <>
                     <CheckCircle className="w-4 h-4" />
-                    <span className="font-khmer">បានផ្ទៀងផ្ទាត់</span>
+                    <span>Verified</span>
                   </>
                 ) : (
-                  <span className="font-khmer">ផ្ទៀងផ្ទាត់ ID</span>
+                  <span>Verify ID</span>
                 )}
               </Button>
             </div>
           </div>
 
-          {/* Special Price Section - Only show if there are special packages */}
+          {/* Special Offers Section */}
           {game.specialPackages && game.specialPackages.length > 0 && (
-            <div className="mb-6 sm:mb-8">
-              <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
-                <span className="w-auto px-3 sm:px-4 h-6 sm:h-8 rounded-full bg-gradient-to-r from-red-500 to-orange-500 text-white flex items-center justify-center font-bold text-xs sm:text-sm">
-                  Special Price
+            <div className="mb-8">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-red-500 to-orange-500">
+                  <Sparkles className="w-4 h-4 text-white" />
+                  <span className="text-white font-bold text-sm">Special Offers</span>
+                </div>
+                <span className="text-xs text-muted-foreground">
+                  {game.specialPackages.length} packages
                 </span>
               </div>
               
-              <div className="grid grid-cols-2 gap-2 sm:gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                 {[...game.specialPackages].sort((a, b) => a.price - b.price).map((pkg) => (
-                  <PackageCard
+                  <ModernPackageCard
                     key={pkg.id}
                     pkg={pkg}
                     selected={selectedPackage === pkg.id}
                     onSelect={() => setSelectedPackage(pkg.id)}
+                    variant="featured"
                   />
                 ))}
               </div>
             </div>
           )}
           
-          {/* Step 2: Select Package */}
-          <div className="mb-6 sm:mb-8">
-            <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
-              <span 
-                className="w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center font-bold text-xs sm:text-base"
-                style={{ 
-                  backgroundColor: settings.frameColor || 'hsl(43 74% 49%)',
-                  color: 'hsl(var(--primary-foreground))'
-                }}
-              >2</span>
-              <h2 className="font-khmer text-base sm:text-lg font-bold">ជ្រើសរើសតម្លៃពេជ្រ</h2>
+          {/* Step 2: Select Package - Modern Grid */}
+          <div className="mb-8">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-gold to-gold-dark flex items-center justify-center text-primary-foreground font-bold shadow-lg">
+                2
+              </div>
+              <div>
+                <h2 className="font-bold text-lg">Select Package</h2>
+                <p className="text-xs text-muted-foreground">{game.packages.length} packages available</p>
+              </div>
             </div>
             
-            <div className="grid grid-cols-2 gap-2 sm:gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
               {[...game.packages].sort((a, b) => a.price - b.price).map((pkg) => (
-                <PackageCard
+                <ModernPackageCard
                   key={pkg.id}
                   pkg={pkg}
                   selected={selectedPackage === pkg.id}
@@ -1188,86 +1191,112 @@ const TopupPage: React.FC = () => {
             </div>
           </div>
           
-          {/* Step 3: Payment Method */}
-          <div 
-            className="mb-6 sm:mb-8 p-3 sm:p-4 rounded-lg"
-            style={{
-              backgroundColor: settings.paymentSectionBgColor || undefined,
-              backgroundImage: settings.paymentSectionBgImage ? `url(${settings.paymentSectionBgImage})` : undefined,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-              color: settings.paymentSectionTextColor || undefined
-            }}
-          >
-            <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
-              <span 
-                className="w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center font-bold text-xs sm:text-base"
-                style={{ 
-                  backgroundColor: settings.frameColor || 'hsl(43 74% 49%)',
-                  color: 'hsl(var(--primary-foreground))'
-                }}
-              >3</span>
-              <h2 className="font-khmer text-base sm:text-lg font-bold">ជ្រើសរើសធនាគារបង់ប្រាក់</h2>
+          {/* Step 3: Payment Method - Modern Card */}
+          <div className="mb-8 p-6 rounded-2xl bg-gradient-to-br from-card via-card to-card/80 border border-border/50">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-gold to-gold-dark flex items-center justify-center text-primary-foreground font-bold shadow-lg">
+                3
+              </div>
+              <div>
+                <h2 className="font-bold text-lg">Payment Method</h2>
+                <p className="text-xs text-muted-foreground">ជ្រើសរើសធនាគារបង់ប្រាក់</p>
+              </div>
             </div>
             
-            <div className="flex gap-2 sm:gap-4 flex-wrap">
+            <div className="grid grid-cols-3 gap-3">
               {paymentMethods.map((method) => (
                 <button
                   key={method.id}
                   onClick={() => setSelectedPayment(method.id)}
                   className={cn(
-                    "px-3 sm:px-6 py-2 sm:py-4 rounded-xl border-2 transition-all flex flex-col items-center gap-1 sm:gap-2 min-w-[70px] sm:min-w-[100px]",
+                    "p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2",
+                    "hover:scale-[1.02] active:scale-[0.98]",
                     selectedPayment === method.id
-                      ? "border-gold bg-gold/20"
-                      : "border-border bg-card hover:border-gold/50"
+                      ? "border-gold bg-gold/10 shadow-lg shadow-gold/10"
+                      : "border-border/50 bg-card hover:border-gold/50"
                   )}
                 >
                   {method.icon.startsWith('http') ? (
                     <img 
                       src={method.icon} 
                       alt={method.name}
-                      className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg object-cover"
+                      className="w-10 h-10 rounded-lg object-cover"
                     />
                   ) : (
-                    <span className="text-xl sm:text-2xl">{method.icon}</span>
+                    <span className="text-2xl">{method.icon}</span>
                   )}
-                  <span className="text-xs sm:text-sm font-medium">{method.name}</span>
+                  <span className="text-xs font-medium">{method.name}</span>
+                  {selectedPayment === method.id && (
+                    <CheckCircle className="w-4 h-4 text-gold" />
+                  )}
                 </button>
               ))}
             </div>
           </div>
           
-          {/* Terms & Submit */}
-          <div className="border-t border-border pt-4 sm:pt-6">
-            <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
-              <span className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-gold text-black flex items-center justify-center text-sm sm:text-base font-bold flex-shrink-0">4</span>
-              <span className="font-khmer text-sm sm:text-base font-bold text-black">ចុច​ ✔ នៅខាងក្រោម​</span>
+          {/* Step 4: Confirm & Pay */}
+          <div className="p-6 rounded-2xl bg-gradient-to-br from-card via-card to-card/80 border border-border/50">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-gold to-gold-dark flex items-center justify-center text-primary-foreground font-bold shadow-lg">
+                4
+              </div>
+              <div>
+                <h2 className="font-bold text-lg">Confirm & Pay</h2>
+                <p className="text-xs text-muted-foreground">យកព្រមទទួលលក្ខខណ្ឌ</p>
+              </div>
             </div>
-            <label className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6 cursor-pointer">
+            
+            <label className="flex items-center gap-3 mb-6 cursor-pointer group">
               <button
                 onClick={() => setAgreedToTerms(!agreedToTerms)}
                 className={cn(
-                  "w-5 h-5 sm:w-6 sm:h-6 rounded-full border-2 flex items-center justify-center transition-colors flex-shrink-0",
-                  agreedToTerms ? "bg-gold border-gold" : "border-muted-foreground"
+                  "w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all",
+                  agreedToTerms 
+                    ? "bg-gold border-gold" 
+                    : "border-border group-hover:border-gold/50"
                 )}
               >
-                {agreedToTerms && <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 text-primary-foreground" />}
+                {agreedToTerms && <CheckCircle className="w-4 h-4 text-primary-foreground" />}
               </button>
-              <span className="font-khmer text-sm sm:text-base">យកព្រមទទួលលក្ខខណ្ឌ</span>
+              <span className="text-sm">
+                I agree to the <span className="text-gold cursor-pointer hover:underline">Terms and Conditions</span>
+              </span>
             </label>
+            
+            {/* Order Summary */}
+            {selectedPackage && (
+              <div className="mb-6 p-4 rounded-xl bg-secondary/30 border border-border/50">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">Selected Package:</span>
+                  <span className="font-bold">
+                    {(game.packages.find(p => p.id === selectedPackage) || game.specialPackages.find(p => p.id === selectedPackage))?.name}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center mt-2">
+                  <span className="text-sm text-muted-foreground">Total:</span>
+                  <span className="text-2xl font-bold gold-text">
+                    {settings.packageCurrencySymbol || '$'}
+                    {((game.packages.find(p => p.id === selectedPackage) || game.specialPackages.find(p => p.id === selectedPackage))?.price || 0).toFixed(2)}
+                  </span>
+                </div>
+              </div>
+            )}
             
             <Button 
               onClick={handleSubmit}
               disabled={isSubmitting || !agreedToTerms || !selectedPackage || !selectedPayment || !verifiedUser}
-              className="w-full py-4 sm:py-6 text-base sm:text-lg font-bold bg-gradient-to-r from-gold to-gold-dark hover:from-gold-dark hover:to-gold text-primary-foreground shadow-gold disabled:opacity-50"
+              className="w-full py-6 text-lg font-bold bg-gradient-to-r from-gold to-gold-dark hover:from-gold-dark hover:to-gold text-primary-foreground shadow-lg shadow-gold/20 disabled:opacity-50 disabled:shadow-none rounded-xl"
             >
               {isSubmitting ? (
                 <span className="flex items-center gap-2">
                   <Loader2 className="w-5 h-5 animate-spin" />
-                  កំពុងដំណើរការ...
+                  Processing...
                 </span>
               ) : (
-                'សម្រេចទិញ'
+                <span className="flex items-center gap-2">
+                  <Zap className="w-5 h-5" />
+                  Pay Now
+                </span>
               )}
             </Button>
           </div>
