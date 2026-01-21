@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Settings, Package, CreditCard, Palette, Plus, Trash2, Edit2, LogOut, User, Save, X, ChevronDown, ChevronUp, DollarSign, Home, ArrowUp, ArrowDown, Key, ShoppingCart, QrCode, Link2, Link2Off, Shield, RefreshCw, Copy, Star, Wallet } from 'lucide-react';
+import { ArrowLeft, Settings, Package, CreditCard, Palette, Plus, Trash2, Edit2, LogOut, User, Save, X, ChevronDown, ChevronUp, DollarSign, Home, ArrowUp, ArrowDown, Key, ShoppingCart, QrCode, Link2, Link2Off, Shield, RefreshCw, Copy, Star, Wallet, Search } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -64,8 +64,14 @@ const AdminPage: React.FC = () => {
 
   // Game state
   const [editingGame, setEditingGame] = useState<string | null>(null);
+  const [gameSearchQuery, setGameSearchQuery] = useState('');
   const [newGame, setNewGame] = useState({ name: '', image: '', coverImage: '', g2bulkCategoryId: '', featured: false });
   const [editGameData, setEditGameData] = useState<{ name: string; image: string; coverImage: string; g2bulkCategoryId: string; featured: boolean }>({ name: '', image: '', coverImage: '', g2bulkCategoryId: '', featured: false });
+  
+  // Filter games based on search query
+  const filteredGames = games.filter(game => 
+    game.name.toLowerCase().includes(gameSearchQuery.toLowerCase())
+  );
   
   // Package state
   const [expandedGame, setExpandedGame] = useState<string | null>(null);
@@ -1490,8 +1496,22 @@ const AdminPage: React.FC = () => {
                 </CardContent>
               </Card>
               
+              {/* Search Games */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search games..."
+                  value={gameSearchQuery}
+                  onChange={(e) => setGameSearchQuery(e.target.value)}
+                  className="pl-9 border-gold/50"
+                />
+              </div>
+
               <div className="space-y-4">
-                {games.map((game) => (
+                {filteredGames.length === 0 && gameSearchQuery ? (
+                  <p className="text-center text-muted-foreground py-8">No games found matching "{gameSearchQuery}"</p>
+                ) : (
+                  filteredGames.map((game) => (
                   <Card key={game.id} className="border-gold/30">
                     <CardContent className="p-4">
                       {editingGame === game.id ? (
@@ -2361,7 +2381,8 @@ const AdminPage: React.FC = () => {
                       )}
                     </CardContent>
                   </Card>
-                ))}
+                  ))
+                )}
               </div>
             </TabsContent>
             
