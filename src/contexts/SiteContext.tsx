@@ -619,13 +619,13 @@ export const SiteProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  // Update existing payment method
+  // Update existing payment method (preserves slug to prevent breaking integrations)
   const updatePaymentMethod = async (id: string, method: Partial<PaymentMethod>) => {
     try {
-      const updateData: { name?: string; slug?: string } = {};
+      // Only update name, never change slug to prevent breaking integrations
+      const updateData: { name?: string } = {};
       if (method.name) {
         updateData.name = method.name;
-        updateData.slug = method.name.toLowerCase().replace(/\s+/g, '-');
       }
       
       const { error } = await supabase
