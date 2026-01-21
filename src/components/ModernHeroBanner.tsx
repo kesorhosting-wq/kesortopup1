@@ -65,8 +65,8 @@ const ModernHeroBanner: React.FC<ModernHeroBannerProps> = ({
   if (!hasImages) {
     // Placeholder hero when no images
     return (
-      <div className="relative w-full overflow-hidden" style={{ height: `${height}px` }}>
-        <div className="absolute inset-0 bg-gradient-to-br from-gold/20 via-cream to-gold-light/20" />
+      <div className="relative w-full overflow-hidden rounded-xl sm:rounded-2xl shadow-lg" style={{ height: `${height}px` }}>
+        <div className="absolute inset-0 bg-gradient-to-br from-gold/20 via-cream to-gold-light/20 rounded-xl sm:rounded-2xl" />
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="text-center px-4">
             <h1 className="font-display text-3xl sm:text-5xl font-bold gold-text mb-4">
@@ -85,7 +85,7 @@ const ModernHeroBanner: React.FC<ModernHeroBannerProps> = ({
   }
 
   return (
-    <div className="relative w-full overflow-hidden group" style={{ height: `${height}px` }}>
+    <div className="relative w-full overflow-hidden group rounded-xl sm:rounded-2xl shadow-lg" style={{ height: `${height}px` }}>
       <Carousel
         setApi={setApi}
         opts={{
@@ -159,9 +159,6 @@ const ModernHeroBanner: React.FC<ModernHeroBannerProps> = ({
         )}
       </Carousel>
       
-      {/* Edge fade effects */}
-      <div className="absolute inset-y-0 left-0 w-8 sm:w-16 bg-gradient-to-r from-background/30 to-transparent pointer-events-none" />
-      <div className="absolute inset-y-0 right-0 w-8 sm:w-16 bg-gradient-to-l from-background/30 to-transparent pointer-events-none" />
     </div>
   );
 };

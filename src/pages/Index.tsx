@@ -37,12 +37,14 @@ const Index: React.FC = () => {
         
         <Header />
         
-        {/* Modern Hero Banner */}
-        <ModernHeroBanner 
-          bannerImage={settings.bannerImage} 
-          bannerImages={settings.bannerImages}
-          bannerHeight={settings.bannerHeight} 
-        />
+        {/* Modern Hero Banner - Contained */}
+        <div className="container mx-auto px-4 pt-4 sm:pt-6">
+          <ModernHeroBanner 
+            bannerImage={settings.bannerImage} 
+            bannerImages={settings.bannerImages}
+            bannerHeight={settings.bannerHeight} 
+          />
+        </div>
         
         {/* Main Content */}
         <main className="flex-1">
