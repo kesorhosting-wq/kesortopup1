@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Settings, Package, CreditCard, Palette, Plus, Trash2, Edit2, LogOut, User, Save, X, ChevronDown, ChevronUp, DollarSign, Home, ArrowUp, ArrowDown, Key, ShoppingCart, QrCode, Link2, Link2Off, Shield } from 'lucide-react';
+import { ArrowLeft, Settings, Package, CreditCard, Palette, Plus, Trash2, Edit2, LogOut, User, Save, X, ChevronDown, ChevronUp, DollarSign, Home, ArrowUp, ArrowDown, Key, ShoppingCart, QrCode, Link2, Link2Off, Shield, RefreshCw } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -1608,7 +1608,33 @@ const AdminPage: React.FC = () => {
                           {/* Package Management */}
                           {expandedGame === game.id && (
                             <>
-                            <div className="mt-4 pt-4 border-t border-border space-y-4">
+                            {/* Game Save Header */}
+                            <div className="mt-4 pt-4 border-t border-border">
+                              <div className="flex items-center justify-between mb-4 p-3 bg-gradient-to-r from-gold/10 to-gold/5 rounded-lg border border-gold/20">
+                                <div className="flex items-center gap-2">
+                                  <Package className="w-5 h-5 text-gold" />
+                                  <span className="font-semibold text-sm">Managing: {game.name}</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs text-muted-foreground">
+                                    {game.packages.length} packages • {game.specialPackages.length} special
+                                  </span>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="border-gold/50 text-gold hover:bg-gold hover:text-primary-foreground"
+                                    onClick={() => {
+                                      refreshGames();
+                                      toast({ title: "Game data refreshed!" });
+                                    }}
+                                  >
+                                    <RefreshCw className="w-3 h-3 mr-1" />
+                                    Refresh
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="space-y-4">
                               <h4 className="font-semibold flex items-center gap-2">
                                 <DollarSign className="w-4 h-4 text-gold" />
                                 Packages
