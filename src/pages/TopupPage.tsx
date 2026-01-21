@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { ArrowLeft, CheckCircle, Loader2, UserCheck, XCircle, Shield, Zap, Sparkles } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Loader2, UserCheck, XCircle, Shield, Zap, Sparkles, Wallet } from 'lucide-react';
 import Header from '@/components/Header';
 import ModernPackageCard from '@/components/ModernPackageCard';
 import { Button } from '@/components/ui/button';
@@ -1204,6 +1204,26 @@ const TopupPage: React.FC = () => {
             </div>
             
             <div className="grid grid-cols-3 gap-3">
+              {/* Wallet Payment Option */}
+              <button
+                onClick={() => setSelectedPayment('wallet')}
+                className={cn(
+                  "p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2",
+                  "hover:scale-[1.02] active:scale-[0.98]",
+                  selectedPayment === 'wallet'
+                    ? "border-emerald-500 bg-emerald-500/10 shadow-lg shadow-emerald-500/10"
+                    : "border-border/50 bg-card hover:border-emerald-500/50"
+                )}
+              >
+                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center">
+                  <Wallet className="w-5 h-5 text-white" />
+                </div>
+                <span className="text-xs font-medium">Wallet</span>
+                {selectedPayment === 'wallet' && (
+                  <CheckCircle className="w-4 h-4 text-emerald-500" />
+                )}
+              </button>
+              
               {paymentMethods.map((method) => (
                 <button
                   key={method.id}

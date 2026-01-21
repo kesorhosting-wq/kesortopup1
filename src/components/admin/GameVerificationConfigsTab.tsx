@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, Edit2, Save, X, CheckCircle, XCircle, RefreshCw, Shield } from 'lucide-react';
+import { Plus, Trash2, Edit2, Save, X, CheckCircle, XCircle, RefreshCw, Shield, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useSite } from '@/contexts/SiteContext';
 
 interface VerificationConfig {
   id: string;
@@ -23,8 +24,10 @@ interface VerificationConfig {
 }
 
 const GameVerificationConfigsTab: React.FC = () => {
+  const { games } = useSite();
   const [configs, setConfigs] = useState<VerificationConfig[]>([]);
   const [loading, setLoading] = useState(true);
+  const [syncing, setSyncing] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editData, setEditData] = useState<Partial<VerificationConfig>>({});
   const [showAddForm, setShowAddForm] = useState(false);
@@ -152,6 +155,67 @@ const GameVerificationConfigsTab: React.FC = () => {
     }
   };
 
+  // Sync configs from games list
+  const handleSyncFromGames = async () => {
+    setSyncing(true);
+    try {
+      let synced = 0;
+      
+      for (const game of games) {
+        // Check if config already exists for this game
+        const exists = configs.some(
+          c => c.game_name.toLowerCase() === game.name.toLowerCase()
+        );
+        
+        if (!exists) {
+          // Normalize game name for API code
+          const normalizedName = game.name.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+          
+          // Determine if zone is required based on common patterns
+          const needsZone = 
+            game.name.toLowerCase().includes('mobile legends') ||
+            game.name.toLowerCase().includes('mlbb') ||
+            game.name.toLowerCase().includes('magic chess');
+          
+          // Map to known API codes
+          let apiCode = normalizedName;
+          if (game.name.toLowerCase().includes('mobile legends') || game.name.toLowerCase().includes('mlbb')) {
+            apiCode = 'mobile-legends';
+          } else if (game.name.toLowerCase().includes('free fire')) {
+            apiCode = 'free-fire';
+          } else if (game.name.toLowerCase().includes('pubg')) {
+            apiCode = 'pubg-mobile';
+          } else if (game.name.toLowerCase().includes('genshin')) {
+            apiCode = 'genshin-impact';
+          } else if (game.name.toLowerCase().includes('valorant')) {
+            apiCode = 'valorant';
+          }
+          
+          const { error } = await supabase.from('game_verification_configs').insert({
+            game_name: game.name,
+            api_code: apiCode,
+            api_provider: 'rapidapi',
+            requires_zone: needsZone,
+            is_active: true
+          });
+          
+          if (!error) synced++;
+        }
+      }
+      
+      if (synced > 0) {
+        toast({ title: `Synced ${synced} new game configs!` });
+        fetchConfigs();
+      } else {
+        toast({ title: 'All games already have configs', description: 'No new configs to sync' });
+      }
+    } catch (error) {
+      toast({ title: 'Sync failed', variant: 'destructive' });
+    } finally {
+      setSyncing(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -179,6 +243,20 @@ const GameVerificationConfigsTab: React.FC = () => {
               <Button variant="outline" size="sm" onClick={fetchConfigs}>
                 <RefreshCw className="w-4 h-4 mr-1" />
                 Refresh
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleSyncFromGames}
+                disabled={syncing}
+                className="border-emerald-500/50 text-emerald-500 hover:bg-emerald-500/10"
+              >
+                {syncing ? (
+                  <RefreshCw className="w-4 h-4 mr-1 animate-spin" />
+                ) : (
+                  <Download className="w-4 h-4 mr-1" />
+                )}
+                Sync from Games
               </Button>
               <Button 
                 size="sm" 
