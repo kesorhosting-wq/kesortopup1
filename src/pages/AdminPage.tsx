@@ -26,6 +26,7 @@ import G2BulkFullImport from '@/components/admin/G2BulkFullImport';
 import G2BulkDebugLogs from '@/components/admin/G2BulkDebugLogs';
 import PackageStockBadge from '@/components/admin/PackageStockBadge';
 import AIGameImageGenerator, { AIBulkImageGenerator } from '@/components/admin/AIGameImageGenerator';
+import { AIBulkPackageIconGenerator } from '@/components/admin/AIPackageIconGenerator';
 import { useG2BulkProductStatus } from '@/hooks/useG2BulkProductStatus';
 import { AdminWalletTab } from '@/components/admin/AdminWalletTab';
 
@@ -1434,6 +1435,10 @@ const AdminPage: React.FC = () => {
                 <AIBulkImageGenerator 
                   games={games} 
                   onComplete={refreshGames} 
+                />
+                <AIBulkPackageIconGenerator
+                  games={games}
+                  onComplete={refreshGames}
                 />
               </div>
               <Card className="border-gold/30 mb-6">
