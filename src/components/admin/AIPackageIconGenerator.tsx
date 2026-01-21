@@ -234,8 +234,8 @@ export const AIBulkPackageIconGenerator: React.FC<AIBulkPackageIconGeneratorProp
         }
       }
 
-      // Delay between requests to avoid rate limiting (15 seconds for free tier)
-      await new Promise(resolve => setTimeout(resolve, 15000));
+      // Delay between requests (5 seconds for Lovable AI)
+      await new Promise(resolve => setTimeout(resolve, 5000));
     }
 
     setIsGenerating(false);

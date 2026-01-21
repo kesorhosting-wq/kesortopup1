@@ -24,9 +24,9 @@ serve(async (req) => {
 
     console.log(`[GenerateGameImage] Generating image for: ${gameName}`);
 
-    const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
-    if (!GEMINI_API_KEY) {
-      throw new Error('GEMINI_API_KEY not configured');
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    if (!LOVABLE_API_KEY) {
+      throw new Error('LOVABLE_API_KEY not configured');
     }
 
     // Create a detailed prompt for game icon generation
@@ -43,19 +43,22 @@ Style: Modern mobile game icon, AAA quality, detailed artwork`;
 
     console.log(`[GenerateGameImage] Prompt: ${prompt}`);
 
-    // Call Google Gemini API for image generation
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp-image-generation:generateContent?key=${GEMINI_API_KEY}`, {
+    // Call Lovable AI Gateway for image generation
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        contents: [{
-          parts: [{ text: prompt }]
-        }],
-        generationConfig: {
-          responseModalities: ["TEXT", "IMAGE"]
-        }
+        model: 'google/gemini-2.5-flash-image-preview',
+        messages: [
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        modalities: ['image', 'text']
       })
     });
 
@@ -69,30 +72,27 @@ Style: Modern mobile game icon, AAA quality, detailed artwork`;
           { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
-      throw new Error(`Gemini API error: ${response.status}`);
+      if (response.status === 402) {
+        return new Response(
+          JSON.stringify({ error: 'AI credits exhausted. Please add credits to continue.' }),
+          { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      throw new Error(`Lovable AI error: ${response.status}`);
     }
 
     const data = await response.json();
     console.log(`[GenerateGameImage] Response received`);
 
-    // Extract the image from Gemini response
-    let imageData: string | null = null;
-    const candidates = data.candidates || [];
-    for (const candidate of candidates) {
-      const parts = candidate.content?.parts || [];
-      for (const part of parts) {
-        if (part.inlineData?.mimeType?.startsWith('image/')) {
-          imageData = `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
-          break;
-        }
-      }
-      if (imageData) break;
-    }
+    // Extract the image from Lovable AI response
+    const imageUrl = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
     
-    if (!imageData) {
+    if (!imageUrl) {
       console.error('[GenerateGameImage] No image in response:', JSON.stringify(data));
       throw new Error('No image generated');
     }
+    
+    const imageData = imageUrl;
 
     // If gameId is provided, upload to storage and update the game
     if (gameId) {
