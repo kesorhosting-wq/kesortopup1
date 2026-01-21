@@ -212,21 +212,22 @@ const AdminPage: React.FC = () => {
     toast({ title: "Special package updated!" });
   };
 
-  const handleAddPayment = () => {
+  const handleAddPayment = async () => {
     if (!newPayment.name) {
       toast({ title: "Please enter payment method name", variant: "destructive" });
       return;
     }
     
-    const payment: PaymentMethod = {
-      id: Date.now().toString(),
-      name: newPayment.name,
-      icon: newPayment.icon || '💳'
-    };
-    
-    addPaymentMethod(payment);
-    setNewPayment({ name: '', icon: '' });
-    toast({ title: "Payment method added!" });
+    try {
+      await addPaymentMethod({
+        name: newPayment.name,
+        icon: newPayment.icon || '💳'
+      });
+      setNewPayment({ name: '', icon: '' });
+      toast({ title: "Payment method added!" });
+    } catch (error) {
+      toast({ title: "Failed to add payment method", variant: "destructive" });
+    }
   };
 
   const handleStartEditPayment = (payment: PaymentMethod) => {
@@ -234,10 +235,14 @@ const AdminPage: React.FC = () => {
     setEditPaymentData({ name: payment.name, icon: payment.icon });
   };
 
-  const handleSavePayment = (paymentId: string) => {
-    updatePaymentMethod(paymentId, editPaymentData);
-    setEditingPayment(null);
-    toast({ title: "Payment method updated!" });
+  const handleSavePayment = async (paymentId: string) => {
+    try {
+      await updatePaymentMethod(paymentId, editPaymentData);
+      setEditingPayment(null);
+      toast({ title: "Payment method updated!" });
+    } catch (error) {
+      toast({ title: "Failed to update payment method", variant: "destructive" });
+    }
   };
 
   return (

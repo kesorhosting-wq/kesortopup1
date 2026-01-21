@@ -127,14 +127,15 @@ interface SiteContextType {
   ikhodePayment: IKhodePayment | null;
   isLoading: boolean;
   refreshGames: () => Promise<void>;
+  refreshPaymentMethods: () => Promise<void>;
   updateSettings: (settings: Partial<SiteSettings>) => void;
   addGame: (game: Omit<Game, 'id' | 'packages' | 'specialPackages'>) => Promise<void>;
   updateGame: (id: string, game: Partial<Game>) => Promise<void>;
   deleteGame: (id: string) => Promise<void>;
   moveGame: (id: string, direction: 'up' | 'down') => Promise<void>;
-  addPaymentMethod: (method: Omit<PaymentMethod, 'id'>) => void;
-  updatePaymentMethod: (id: string, method: Partial<PaymentMethod>) => void;
-  deletePaymentMethod: (id: string) => void;
+  addPaymentMethod: (method: Omit<PaymentMethod, 'id'>) => Promise<void>;
+  updatePaymentMethod: (id: string, method: Partial<PaymentMethod>) => Promise<void>;
+  deletePaymentMethod: (id: string) => Promise<void>;
   addPackage: (gameId: string, pkg: Omit<Package, 'id'>) => Promise<void>;
   updatePackage: (gameId: string, packageId: string, pkg: Partial<Package>) => Promise<void>;
   deletePackage: (gameId: string, packageId: string) => Promise<void>;
@@ -230,7 +231,7 @@ const SiteContext = createContext<SiteContextType | undefined>(undefined);
 export const SiteProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [settings, setSettings] = useState<SiteSettings>(defaultSettings);
   const [games, setGames] = useState<Game[]>([]);
-  const [paymentMethods] = useState<PaymentMethod[]>(defaultPaymentMethods);
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>(defaultPaymentMethods);
   const [ikhodePayment, setIkhodePayment] = useState<IKhodePayment | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -242,13 +243,15 @@ export const SiteProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const loadData = async (gamesOnly = false) => {
     try {
       // Load all data in parallel for faster loading
-      const [settingsResult, gamesResult, packagesResult, specialPackagesResult, ikhodeGatewayResult] = await Promise.all([
+      const [settingsResult, gamesResult, packagesResult, specialPackagesResult, ikhodeGatewayResult, paymentMethodsResult] = await Promise.all([
         supabase.from('site_settings').select('*'),
         supabase.from('games').select('*').order('sort_order', { ascending: true }),
         supabase.from('packages').select('*').order('sort_order', { ascending: true }),
         supabase.from('special_packages').select('*').order('sort_order', { ascending: true }),
         // Use public view to avoid exposing sensitive config data (webhook_secret, api keys)
         supabase.from('payment_gateways_public').select('*').eq('slug', 'ikhode-bakong').maybeSingle(),
+        // Load all payment gateways
+        supabase.from('payment_gateways').select('id, name, slug, enabled').order('created_at', { ascending: true }),
       ]);
       
       const settingsData = settingsResult.data;
@@ -256,6 +259,17 @@ export const SiteProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const packagesData = packagesResult.data;
       const specialPackagesData = specialPackagesResult.data;
       const ikhodeGateway = ikhodeGatewayResult.data;
+      const paymentGatewaysData = paymentMethodsResult.data;
+
+      // Load payment methods from database
+      if (paymentGatewaysData && paymentGatewaysData.length > 0) {
+        const loadedPaymentMethods: PaymentMethod[] = paymentGatewaysData.map(pg => ({
+          id: pg.id,
+          name: pg.name,
+          icon: pg.slug === 'ikhode-bakong' ? '📱' : '💳',
+        }));
+        setPaymentMethods(loadedPaymentMethods);
+      }
 
       // Load IKhode payment gateway config (public view only exposes websocket_url, not secrets)
       if (ikhodeGateway && ikhodeGateway.enabled) {
@@ -554,17 +568,95 @@ export const SiteProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  // Payment methods are now static - these functions are no-ops for backwards compatibility
-  const addPaymentMethod = () => {
-    console.log('Payment methods are now managed via IKhode settings');
+  // Refresh payment methods from database
+  const refreshPaymentMethods = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('payment_gateways')
+        .select('id, name, slug, enabled')
+        .order('created_at', { ascending: true });
+      
+      if (error) throw error;
+      if (data && data.length > 0) {
+        const loadedPaymentMethods: PaymentMethod[] = data.map(pg => ({
+          id: pg.id,
+          name: pg.name,
+          icon: pg.slug === 'ikhode-bakong' ? '📱' : '💳',
+        }));
+        setPaymentMethods(loadedPaymentMethods);
+      }
+    } catch (error) {
+      handleApiError(error, 'SiteContext.refreshPaymentMethods');
+    }
   };
 
-  const updatePaymentMethod = () => {
-    console.log('Payment methods are now managed via IKhode settings');
+  // Add new payment method to database
+  const addPaymentMethod = async (method: Omit<PaymentMethod, 'id'>) => {
+    try {
+      const slug = method.name.toLowerCase().replace(/\s+/g, '-');
+      const { data, error } = await supabase
+        .from('payment_gateways')
+        .insert({
+          name: method.name,
+          slug: slug,
+          enabled: true,
+          config: {}
+        })
+        .select()
+        .single();
+      
+      if (error) throw error;
+      if (data) {
+        setPaymentMethods(prev => [...prev, {
+          id: data.id,
+          name: data.name,
+          icon: method.icon || '💳',
+        }]);
+      }
+    } catch (error) {
+      handleApiError(error, 'SiteContext.addPaymentMethod');
+      throw error; // Re-throw so caller can show error toast
+    }
   };
 
-  const deletePaymentMethod = () => {
-    console.log('Payment methods are now managed via IKhode settings');
+  // Update existing payment method
+  const updatePaymentMethod = async (id: string, method: Partial<PaymentMethod>) => {
+    try {
+      const updateData: { name?: string; slug?: string } = {};
+      if (method.name) {
+        updateData.name = method.name;
+        updateData.slug = method.name.toLowerCase().replace(/\s+/g, '-');
+      }
+      
+      const { error } = await supabase
+        .from('payment_gateways')
+        .update(updateData)
+        .eq('id', id);
+      
+      if (error) throw error;
+      setPaymentMethods(prev => prev.map(p => 
+        p.id === id ? { ...p, ...method } : p
+      ));
+    } catch (error) {
+      handleApiError(error, 'SiteContext.updatePaymentMethod');
+      throw error;
+    }
+  };
+
+  // Delete payment method
+  const deletePaymentMethod = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('payment_gateways')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+      setPaymentMethods(prev => prev.filter(p => p.id !== id));
+    } catch (error) {
+      handleApiError(error, 'SiteContext.deletePaymentMethod');
+      throw error;
+    }
   };
 
   const addPackage = async (gameId: string, pkg: Omit<Package, 'id'>) => {
@@ -817,6 +909,7 @@ export const SiteProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       ikhodePayment,
       isLoading,
       refreshGames,
+      refreshPaymentMethods,
       updateSettings,
       addGame,
       updateGame,
@@ -850,14 +943,15 @@ export const useSite = () => {
       ikhodePayment: null,
       isLoading: false,
       refreshGames: async () => {},
+      refreshPaymentMethods: async () => {},
       updateSettings: () => {},
       addGame: async () => {},
       updateGame: async () => {},
       deleteGame: async () => {},
       moveGame: async () => {},
-      addPaymentMethod: () => {},
-      updatePaymentMethod: () => {},
-      deletePaymentMethod: () => {},
+      addPaymentMethod: async () => {},
+      updatePaymentMethod: async () => {},
+      deletePaymentMethod: async () => {},
       addPackage: async () => {},
       updatePackage: async () => {},
       deletePackage: async () => {},
