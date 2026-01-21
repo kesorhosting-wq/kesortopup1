@@ -114,6 +114,7 @@ const AdminPage: React.FC = () => {
     await updateGame(gameId, {
       name: editGameData.name,
       image: editGameData.image,
+      coverImage: editGameData.coverImage || undefined,
       g2bulkCategoryId: editGameData.g2bulkCategoryId || undefined
     });
     setEditingGame(null);
@@ -1437,13 +1438,23 @@ const AdminPage: React.FC = () => {
                 <CardContent>
                   <div className="flex gap-4 items-end flex-wrap">
                     <div className="w-24">
-                      <label className="text-sm font-medium mb-2 block">Image</label>
+                      <label className="text-sm font-medium mb-2 block">Icon</label>
                       <ImageUpload
                         value={newGame.image}
                         onChange={(url) => setNewGame(prev => ({ ...prev, image: url }))}
                         folder="games"
                         aspectRatio="square"
                         placeholder="Game"
+                      />
+                    </div>
+                    <div className="w-32">
+                      <label className="text-sm font-medium mb-2 block">Cover Image</label>
+                      <ImageUpload
+                        value={newGame.coverImage}
+                        onChange={(url) => setNewGame(prev => ({ ...prev, coverImage: url }))}
+                        folder="game-covers"
+                        aspectRatio="wide"
+                        placeholder="Cover"
                       />
                     </div>
                     <div className="flex-1 min-w-[200px]">
