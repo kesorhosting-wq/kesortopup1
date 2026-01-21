@@ -122,38 +122,50 @@ const WalletPage: React.FC = () => {
     }
 
     if (!ikhodePayment?.isEnabled) {
-      toast({ title: 'Payment not available', description: 'KHQR payment is not configured', variant: 'destructive' });
+      toast({ title: 'Payment not available', description: 'KHQR payment is not configured. Please configure it in Admin → Settings → IKhode Settings.', variant: 'destructive' });
       return;
     }
 
     setIsProcessing(true);
 
     try {
-      // Generate KHQR for wallet top-up
+      const walletOrderId = `wallet-${user?.id?.slice(0, 8)}-${Date.now()}`;
+      
+      // Generate KHQR for wallet top-up using the correct action format
       const { data, error } = await supabase.functions.invoke('ikhode-payment', {
         body: {
+          action: 'generate-khqr',
           amount: amount,
-          orderId: `wallet-${user?.id}-${Date.now()}`,
-          description: `Wallet Top-up $${amount}`,
-          isWalletTopup: true
+          orderId: walletOrderId,
+          playerName: user?.email?.split('@')[0] || 'Customer',
+          gameName: 'Wallet Top-up',
+          email: user?.email || 'customer@kesor.com'
         }
       });
 
       if (error) throw error;
 
-      if (data?.qrCode) {
+      // The edge function returns qrCodeData, not qrCode
+      if (data?.qrCodeData) {
         setGeneratedQR({
-          qrCode: data.qrCode,
+          qrCode: data.qrCodeData,
           wsUrl: data.wsUrl || ikhodePayment.websocketUrl || '',
-          orderId: data.orderId || `wallet-${Date.now()}`,
+          orderId: data.orderId || walletOrderId,
           amount: amount
         });
+        toast({ title: 'QR Code generated', description: 'Scan to complete payment' });
+      } else if (data?.error) {
+        throw new Error(data.error);
       } else {
-        throw new Error('Failed to generate QR code');
+        throw new Error('Failed to generate QR code - no data returned');
       }
     } catch (error: any) {
       console.error('Topup error:', error);
-      toast({ title: 'Failed to generate payment', description: error.message, variant: 'destructive' });
+      toast({ 
+        title: 'Failed to generate payment', 
+        description: error.message || 'Unknown error occurred', 
+        variant: 'destructive' 
+      });
     } finally {
       setIsProcessing(false);
     }
