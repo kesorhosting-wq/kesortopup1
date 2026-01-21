@@ -2419,9 +2419,13 @@ const AdminPage: React.FC = () => {
                             <Button 
                               variant="outline" 
                               size="icon"
-                              onClick={() => {
-                                deletePaymentMethod(method.id);
-                                toast({ title: "Payment method deleted" });
+                              onClick={async () => {
+                                try {
+                                  await deletePaymentMethod(method.id);
+                                  toast({ title: "Payment method deleted" });
+                                } catch (error) {
+                                  toast({ title: "Failed to delete payment method", variant: "destructive" });
+                                }
                               }}
                               className="border-destructive/50 text-destructive hover:bg-destructive hover:text-destructive-foreground h-8 w-8"
                             >
