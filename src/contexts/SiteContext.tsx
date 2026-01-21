@@ -7,6 +7,7 @@ export interface Game {
   id: string;
   name: string;
   image: string;
+  coverImage?: string;
   packages: Package[];
   specialPackages: Package[];
   g2bulkCategoryId?: string;
@@ -362,6 +363,7 @@ export const SiteProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           id: game.id,
           name: game.name,
           image: game.image || '',
+          coverImage: (game as any).cover_image || undefined,
           g2bulkCategoryId: (game as any).g2bulk_category_id || undefined,
           packages: (packagesData || [])
             .filter(pkg => pkg.game_id === game.id)
@@ -423,6 +425,7 @@ export const SiteProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           id: game.id,
           name: game.name,
           image: game.image || '',
+          coverImage: (game as any).cover_image || undefined,
           g2bulkCategoryId: (game as any).g2bulk_category_id || undefined,
           packages: (packagesData || [])
             .filter(pkg => pkg.game_id === game.id)
@@ -518,6 +521,7 @@ export const SiteProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const updateData: any = {};
       if (updatedGame.name !== undefined) updateData.name = updatedGame.name;
       if (updatedGame.image !== undefined) updateData.image = updatedGame.image;
+      if (updatedGame.coverImage !== undefined) updateData.cover_image = updatedGame.coverImage || null;
       if (updatedGame.g2bulkCategoryId !== undefined) updateData.g2bulk_category_id = updatedGame.g2bulkCategoryId || null;
 
       const { error } = await supabase

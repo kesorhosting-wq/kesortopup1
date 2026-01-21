@@ -64,8 +64,8 @@ const AdminPage: React.FC = () => {
 
   // Game state
   const [editingGame, setEditingGame] = useState<string | null>(null);
-  const [newGame, setNewGame] = useState({ name: '', image: '', g2bulkCategoryId: '' });
-  const [editGameData, setEditGameData] = useState<{ name: string; image: string; g2bulkCategoryId: string }>({ name: '', image: '', g2bulkCategoryId: '' });
+  const [newGame, setNewGame] = useState({ name: '', image: '', coverImage: '', g2bulkCategoryId: '' });
+  const [editGameData, setEditGameData] = useState<{ name: string; image: string; coverImage: string; g2bulkCategoryId: string }>({ name: '', image: '', coverImage: '', g2bulkCategoryId: '' });
   
   // Package state
   const [expandedGame, setExpandedGame] = useState<string | null>(null);
@@ -95,8 +95,8 @@ const AdminPage: React.FC = () => {
       return;
     }
     
-    await addGame({ name: newGame.name, image: newGame.image, g2bulkCategoryId: newGame.g2bulkCategoryId || undefined });
-    setNewGame({ name: '', image: '', g2bulkCategoryId: '' });
+    await addGame({ name: newGame.name, image: newGame.image, coverImage: newGame.coverImage || undefined, g2bulkCategoryId: newGame.g2bulkCategoryId || undefined });
+    setNewGame({ name: '', image: '', coverImage: '', g2bulkCategoryId: '' });
     toast({ title: "Game added!" });
   };
 
@@ -105,6 +105,7 @@ const AdminPage: React.FC = () => {
     setEditGameData({ 
       name: game.name, 
       image: game.image,
+      coverImage: game.coverImage || '',
       g2bulkCategoryId: (game as Game & { g2bulkCategoryId?: string }).g2bulkCategoryId || ''
     });
   };
@@ -1484,11 +1485,22 @@ const AdminPage: React.FC = () => {
                         <div className="space-y-4">
                           <div className="flex gap-4 items-start flex-wrap">
                             <div className="w-20">
+                              <label className="text-xs text-muted-foreground mb-1 block">Icon</label>
                               <ImageUpload
                                 value={editGameData.image}
                                 onChange={(url) => setEditGameData(prev => ({ ...prev, image: url }))}
                                 folder="games"
                                 aspectRatio="square"
+                              />
+                            </div>
+                            <div className="w-32">
+                              <label className="text-xs text-muted-foreground mb-1 block">Cover Image</label>
+                              <ImageUpload
+                                value={editGameData.coverImage}
+                                onChange={(url) => setEditGameData(prev => ({ ...prev, coverImage: url }))}
+                                folder="game-covers"
+                                aspectRatio="wide"
+                                placeholder="Cover"
                               />
                             </div>
                             <div className="flex-1 min-w-[150px]">
