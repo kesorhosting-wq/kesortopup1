@@ -60,6 +60,11 @@ export const AIPackageIconGenerator: React.FC<AIPackageIconGeneratorProps> = ({
     }
   };
 
+  // Don't show button if icon already exists
+  if (currentIcon && currentIcon.trim() !== '') {
+    return null;
+  }
+
   return (
     <Button
       variant="ghost"
