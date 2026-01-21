@@ -11,6 +11,7 @@ export interface Game {
   packages: Package[];
   specialPackages: Package[];
   g2bulkCategoryId?: string;
+  featured?: boolean;
 }
 
 export interface Package {
@@ -365,6 +366,7 @@ export const SiteProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           image: game.image || '',
           coverImage: (game as any).cover_image || undefined,
           g2bulkCategoryId: (game as any).g2bulk_category_id || undefined,
+          featured: (game as any).featured || false,
           packages: (packagesData || [])
             .filter(pkg => pkg.game_id === game.id)
             .map(pkg => ({
@@ -427,6 +429,7 @@ export const SiteProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           image: game.image || '',
           coverImage: (game as any).cover_image || undefined,
           g2bulkCategoryId: (game as any).g2bulk_category_id || undefined,
+          featured: (game as any).featured || false,
           packages: (packagesData || [])
             .filter(pkg => pkg.game_id === game.id)
             .map(pkg => ({
@@ -523,6 +526,7 @@ export const SiteProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (updatedGame.image !== undefined) updateData.image = updatedGame.image;
       if (updatedGame.coverImage !== undefined) updateData.cover_image = updatedGame.coverImage || null;
       if (updatedGame.g2bulkCategoryId !== undefined) updateData.g2bulk_category_id = updatedGame.g2bulkCategoryId || null;
+      if (updatedGame.featured !== undefined) updateData.featured = updatedGame.featured;
 
       const { error } = await supabase
         .from('games')
