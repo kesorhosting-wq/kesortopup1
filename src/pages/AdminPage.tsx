@@ -64,8 +64,8 @@ const AdminPage: React.FC = () => {
 
   // Game state
   const [editingGame, setEditingGame] = useState<string | null>(null);
-  const [newGame, setNewGame] = useState({ name: '', image: '', coverImage: '', g2bulkCategoryId: '' });
-  const [editGameData, setEditGameData] = useState<{ name: string; image: string; coverImage: string; g2bulkCategoryId: string }>({ name: '', image: '', coverImage: '', g2bulkCategoryId: '' });
+  const [newGame, setNewGame] = useState({ name: '', image: '', coverImage: '', g2bulkCategoryId: '', featured: false });
+  const [editGameData, setEditGameData] = useState<{ name: string; image: string; coverImage: string; g2bulkCategoryId: string; featured: boolean }>({ name: '', image: '', coverImage: '', g2bulkCategoryId: '', featured: false });
   
   // Package state
   const [expandedGame, setExpandedGame] = useState<string | null>(null);
@@ -95,8 +95,8 @@ const AdminPage: React.FC = () => {
       return;
     }
     
-    await addGame({ name: newGame.name, image: newGame.image, coverImage: newGame.coverImage || undefined, g2bulkCategoryId: newGame.g2bulkCategoryId || undefined });
-    setNewGame({ name: '', image: '', coverImage: '', g2bulkCategoryId: '' });
+    await addGame({ name: newGame.name, image: newGame.image, coverImage: newGame.coverImage || undefined, g2bulkCategoryId: newGame.g2bulkCategoryId || undefined, featured: newGame.featured });
+    setNewGame({ name: '', image: '', coverImage: '', g2bulkCategoryId: '', featured: false });
     toast({ title: "Game added!" });
   };
 
@@ -106,7 +106,8 @@ const AdminPage: React.FC = () => {
       name: game.name, 
       image: game.image,
       coverImage: game.coverImage || '',
-      g2bulkCategoryId: (game as Game & { g2bulkCategoryId?: string }).g2bulkCategoryId || ''
+      g2bulkCategoryId: (game as Game & { g2bulkCategoryId?: string }).g2bulkCategoryId || '',
+      featured: game.featured || false
     });
   };
 
@@ -115,7 +116,8 @@ const AdminPage: React.FC = () => {
       name: editGameData.name,
       image: editGameData.image,
       coverImage: editGameData.coverImage || undefined,
-      g2bulkCategoryId: editGameData.g2bulkCategoryId || undefined
+      g2bulkCategoryId: editGameData.g2bulkCategoryId || undefined,
+      featured: editGameData.featured
     });
     setEditingGame(null);
     toast({ title: "Game updated!" });
@@ -1530,6 +1532,18 @@ const AdminPage: React.FC = () => {
                                 placeholder="Link to G2Bulk..."
                               />
                             </div>
+                            <div className="flex items-center gap-2">
+                              <Button
+                                type="button"
+                                variant={editGameData.featured ? "default" : "outline"}
+                                size="sm"
+                                onClick={() => setEditGameData(prev => ({ ...prev, featured: !prev.featured }))}
+                                className={editGameData.featured ? "bg-amber-500 hover:bg-amber-600 text-white" : "border-gold/50"}
+                              >
+                                <Star className={`w-4 h-4 mr-1 ${editGameData.featured ? 'fill-current' : ''}`} />
+                                Featured
+                              </Button>
+                            </div>
                           </div>
                           <div className="flex gap-2 justify-end">
                             <Button 
@@ -1559,14 +1573,22 @@ const AdminPage: React.FC = () => {
                               className="w-16 h-16 rounded-lg object-cover border-2 border-gold/50"
                             />
                             <div className="flex-1">
-                              <h3 className="font-bold">{game.name}</h3>
+                              <div className="flex items-center gap-2">
+                                <h3 className="font-bold">{game.name}</h3>
+                                {game.featured && (
+                                  <span className="text-xs bg-amber-500/20 text-amber-600 px-2 py-0.5 rounded-full flex items-center gap-1">
+                                    <Star className="w-3 h-3 fill-current" />
+                                    Featured
+                                  </span>
+                                )}
+                              </div>
                               <div className="flex items-center gap-2 mt-1 flex-wrap">
                                 <p className="text-sm text-muted-foreground">
                                   {game.packages.length + game.specialPackages.length} packages
                                 </p>
                                 {game.g2bulkCategoryId && (
                                   <span className="text-xs bg-green-500/20 text-green-600 px-2 py-0.5 rounded-full flex items-center gap-1">
-                                    ✓ G2Bulk Linked
+                                    ✓ Linked
                                   </span>
                                 )}
                               </div>

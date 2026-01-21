@@ -136,6 +136,7 @@ export type Database = {
           cover_image: string | null
           created_at: string
           description: string | null
+          featured: boolean | null
           g2bulk_category_id: string | null
           id: string
           image: string | null
@@ -147,6 +148,7 @@ export type Database = {
           cover_image?: string | null
           created_at?: string
           description?: string | null
+          featured?: boolean | null
           g2bulk_category_id?: string | null
           id?: string
           image?: string | null
@@ -158,6 +160,7 @@ export type Database = {
           cover_image?: string | null
           created_at?: string
           description?: string | null
+          featured?: boolean | null
           g2bulk_category_id?: string | null
           id?: string
           image?: string | null
