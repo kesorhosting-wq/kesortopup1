@@ -64,17 +64,42 @@ const TopupPage: React.FC = () => {
       if (!game?.name) return;
       
       try {
-        const { data, error } = await supabase
+        // Try exact match first, then fuzzy match
+        let { data, error } = await supabase
           .from('game_verification_configs')
           .select('requires_zone, default_zone')
           .eq('is_active', true)
           .ilike('game_name', game.name)
           .maybeSingle();
         
-        if (!error && data) {
-          setGameVerificationConfig(data);
+        // If no exact match, try partial match
+        if (!data) {
+          const result = await supabase
+            .from('game_verification_configs')
+            .select('requires_zone, default_zone, game_name')
+            .eq('is_active', true)
+            .ilike('game_name', `%${game.name.split(' ')[0]}%`)
+            .limit(10);
+          
+          if (result.data && result.data.length > 0) {
+            // Find best match
+            const exactMatch = result.data.find(
+              r => r.game_name.toLowerCase() === game.name.toLowerCase()
+            );
+            const partialMatch = result.data.find(
+              r => r.game_name.toLowerCase().includes(game.name.toLowerCase()) ||
+                   game.name.toLowerCase().includes(r.game_name.toLowerCase())
+            );
+            data = exactMatch || partialMatch || result.data[0];
+          }
+        }
+        
+        if (data) {
+          console.log(`[TopupPage] Loaded config for "${game.name}": requires_zone=${data.requires_zone}`);
+          setGameVerificationConfig({ requires_zone: data.requires_zone, default_zone: data.default_zone });
         } else {
           // Default: no zone required
+          console.log(`[TopupPage] No config found for "${game.name}", defaulting to no zone`);
           setGameVerificationConfig({ requires_zone: false, default_zone: null });
         }
       } catch (error) {
@@ -113,7 +138,7 @@ const TopupPage: React.FC = () => {
   }, [user]);
 
   // Show loading state while data is being fetched
-  if (isLoading) {
+  if (isLoading || (game && gameVerificationConfig === null)) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gold"></div>
