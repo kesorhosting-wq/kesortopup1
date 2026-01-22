@@ -22,6 +22,11 @@ interface VerifiedUser {
   accountName?: string;
 }
 
+interface GameVerificationConfig {
+  requires_zone: boolean;
+  default_zone: string | null;
+}
+
 const TopupPage: React.FC = () => {
   const { gameId } = useParams();
   const navigate = useNavigate();
@@ -45,10 +50,41 @@ const TopupPage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [walletBalance, setWalletBalance] = useState<number>(0);
   
+  // Database config for zone requirement
+  const [gameVerificationConfig, setGameVerificationConfig] = useState<GameVerificationConfig | null>(null);
+  
   // Verification states
   const [isVerifying, setIsVerifying] = useState(false);
   const [verifiedUser, setVerifiedUser] = useState<VerifiedUser | null>(null);
   const [verificationError, setVerificationError] = useState<string | null>(null);
+  
+  // Fetch game verification config from database
+  useEffect(() => {
+    const fetchVerificationConfig = async () => {
+      if (!game?.name) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('game_verification_configs')
+          .select('requires_zone, default_zone')
+          .eq('is_active', true)
+          .ilike('game_name', game.name)
+          .maybeSingle();
+        
+        if (!error && data) {
+          setGameVerificationConfig(data);
+        } else {
+          // Default: no zone required
+          setGameVerificationConfig({ requires_zone: false, default_zone: null });
+        }
+      } catch (error) {
+        console.error('Failed to fetch verification config:', error);
+        setGameVerificationConfig({ requires_zone: false, default_zone: null });
+      }
+    };
+    
+    fetchVerificationConfig();
+  }, [game?.name]);
   
   // Auto-fill cached IDs when available
   useEffect(() => {
@@ -96,703 +132,115 @@ const TopupPage: React.FC = () => {
     );
   }
 
-  // Game-specific ID field configurations based on real game requirements
+  // Game-specific ID field configurations - uses database config for zone requirement
   const getGameIdConfig = (gameName: string) => {
     const normalizedName = gameName.toLowerCase().trim();
     
-    // Mobile Legends variants - require User ID + Server ID
-    if (normalizedName.includes('mobile legends') || normalizedName === 'mlbb') {
+    // Check database config for zone requirement (this is the source of truth)
+    const requiresZone = gameVerificationConfig?.requires_zone ?? false;
+    
+    // Get label configuration based on game type
+    const getFieldLabels = () => {
+      // Riot games use Riot ID
+      if (normalizedName.includes('valorant') || normalizedName.includes('league of legends') || 
+          normalizedName === 'lol' || normalizedName.includes('wild rift') ||
+          normalizedName.includes('teamfight tactics') || normalizedName === 'tft' ||
+          normalizedName.includes('legends of runeterra') || normalizedName === 'lor') {
+        return { userLabel: 'Riot ID', userPlaceholder: 'Name#Tag', example: 'ឧទាហរណ៍: PlayerName#1234' };
+      }
+      
+      // Mobile Legends uses User ID + Server ID
+      if (normalizedName.includes('mobile legends') || normalizedName === 'mlbb' || normalizedName.includes('magic chess')) {
+        return { userLabel: 'User ID', userPlaceholder: 'បញ្ចូល User ID', serverLabel: 'Server ID', example: 'ឧទាហរណ៍: 123456789 (1234)' };
+      }
+      
+      // Genshin/Honkai/miHoYo games use UID
+      if (normalizedName.includes('genshin') || normalizedName.includes('honkai') || 
+          normalizedName.includes('zenless zone zero') || normalizedName === 'zzz' ||
+          normalizedName.includes('wuthering waves') || normalizedName.includes('tower of fantasy')) {
+        return { userLabel: 'UID', userPlaceholder: 'បញ្ចូល UID', serverLabel: 'Server', example: 'ឧទាហរណ៍: 8001234567' };
+      }
+      
+      // PUBG uses Character ID
+      if (normalizedName.includes('pubg')) {
+        return { userLabel: 'Character ID', userPlaceholder: 'បញ្ចូល Character ID', example: 'ឧទាហរណ៍: 5123456789' };
+      }
+      
+      // COD uses Player UID
+      if (normalizedName.includes('call of duty') || normalizedName.includes('cod')) {
+        return { userLabel: 'Player UID', userPlaceholder: 'បញ្ចូល Player UID', example: 'ឧទាហរណ៍: 6742123456789' };
+      }
+      
+      // Supercell games use Player Tag
+      if (normalizedName.includes('clash of clans') || normalizedName === 'coc' ||
+          normalizedName.includes('clash royale') || normalizedName.includes('brawl stars')) {
+        return { userLabel: 'Player Tag', userPlaceholder: '#ABC123', example: 'ឧទាហរណ៍: #ABC123XY' };
+      }
+      
+      // TikTok uses Username
+      if (normalizedName.includes('tiktok')) {
+        return { userLabel: 'TikTok Username', userPlaceholder: '@username', example: 'ឧទាហរណ៍: @yourusername' };
+      }
+      
+      // Zepeto
+      if (normalizedName.includes('zepeto')) {
+        return { userLabel: 'ZEPETO ID', userPlaceholder: 'បញ្ចូល ZEPETO ID', example: 'ឧទាហរណ៍: abc123xyz' };
+      }
+      
+      // Roblox uses Username
+      if (normalizedName.includes('roblox')) {
+        return { userLabel: 'Roblox Username', userPlaceholder: 'បញ្ចូល Username', example: 'ឧទាហរណ៍: YourRobloxName' };
+      }
+      
+      // Steam uses Steam ID
+      if (normalizedName.includes('steam')) {
+        return { userLabel: 'Steam ID', userPlaceholder: 'បញ្ចូល Steam ID', example: 'ឧទាហរណ៍: 76561198012345678' };
+      }
+      
+      // Discord
+      if (normalizedName.includes('discord')) {
+        return { userLabel: 'Discord Username', userPlaceholder: 'username#0000', example: 'ឧទាហរណ៍: player#1234' };
+      }
+      
+      // Fortnite
+      if (normalizedName.includes('fortnite')) {
+        return { userLabel: 'Epic Games ID', userPlaceholder: 'បញ្ចូល Epic ID', example: 'ឧទាហរណ៍: EpicUsername' };
+      }
+      
+      // Ragnarok
+      if (normalizedName.includes('ragnarok')) {
+        return { userLabel: 'Character ID', userPlaceholder: 'បញ្ចូល Character ID', serverLabel: 'Server', example: 'ឧទាហរណ៍: 12345678' };
+      }
+      
+      // State/Survival games
+      if (normalizedName.includes('state of survival') || normalizedName.includes('whiteout survival') ||
+          normalizedName.includes('puzzles and survival')) {
+        return { userLabel: 'Player ID', userPlaceholder: 'បញ្ចូល Player ID', serverLabel: 'State', example: 'ឧទាហរណ៍: 12345678' };
+      }
+      
+      // Default
+      return { userLabel: 'Player ID', userPlaceholder: 'បញ្ចូល Player ID', serverLabel: 'Server', example: 'ឧទាហរណ៍: 123456789' };
+    };
+    
+    const labels = getFieldLabels();
+    
+    // Build fields based on database requires_zone setting
+    if (requiresZone) {
       return {
         fields: [
-          { key: 'userId', label: 'User ID', placeholder: 'បញ្ចូល User ID' },
-          { key: 'serverId', label: 'Server ID', placeholder: 'Server ID', width: 'w-24 sm:w-32' }
+          { key: 'userId', label: labels.userLabel, placeholder: labels.userPlaceholder },
+          { key: 'serverId', label: labels.serverLabel || 'Server', placeholder: labels.serverLabel || 'Server', width: 'w-24 sm:w-32' }
         ],
-        validation: 'សូមបញ្ចូល User ID និង Server ID',
-        example: 'ឧទាហរណ៍: 123456789 (1234)'
+        validation: `សូមបញ្ចូល ${labels.userLabel} និង ${labels.serverLabel || 'Server'}`,
+        example: labels.example
       };
     }
     
-    // Free Fire variants - require Player ID (no server needed for most regions)
-    if (normalizedName.includes('freefire') || normalizedName.includes('free fire') || normalizedName === 'ff') {
-      return {
-        fields: [
-          { key: 'userId', label: 'Player ID', placeholder: 'បញ្ចូល Player ID' }
-        ],
-        validation: 'សូមបញ្ចូល Player ID',
-        example: 'ឧទាហរណ៍: 123456789'
-      };
-    }
-    
-    // Valorant - Riot ID format
-    if (normalizedName.includes('valorant')) {
-      return {
-        fields: [
-          { key: 'userId', label: 'Riot ID', placeholder: 'Name#Tag' }
-        ],
-        validation: 'សូមបញ្ចូល Riot ID',
-        example: 'ឧទាហរណ៍: PlayerName#1234'
-      };
-    }
-    
-    // League of Legends - Riot ID format
-    if (normalizedName.includes('league of legends') || normalizedName === 'lol') {
-      return {
-        fields: [
-          { key: 'userId', label: 'Riot ID', placeholder: 'Name#Tag' }
-        ],
-        validation: 'សូមបញ្ចូល Riot ID',
-        example: 'ឧទាហរណ៍: Summoner#1234'
-      };
-    }
-    
-    // Teamfight Tactics - Riot ID format
-    if (normalizedName.includes('teamfight tactics') || normalizedName === 'tft') {
-      return {
-        fields: [
-          { key: 'userId', label: 'Riot ID', placeholder: 'Name#Tag' }
-        ],
-        validation: 'សូមបញ្ចូល Riot ID',
-        example: 'ឧទាហរណ៍: Player#1234'
-      };
-    }
-    
-    // Legends of Runeterra - Riot ID
-    if (normalizedName.includes('legends of runeterra') || normalizedName === 'lor') {
-      return {
-        fields: [
-          { key: 'userId', label: 'Riot ID', placeholder: 'Name#Tag' }
-        ],
-        validation: 'សូមបញ្ចូល Riot ID',
-        example: 'ឧទាហរណ៍: Player#1234'
-      };
-    }
-    
-    // Call of Duty Mobile - Player UID
-    if (normalizedName.includes('call of duty') || normalizedName.includes('cod')) {
-      return {
-        fields: [
-          { key: 'userId', label: 'Player UID', placeholder: 'បញ្ចូល Player UID' }
-        ],
-        validation: 'សូមបញ្ចូល Player UID',
-        example: 'ឧទាហរណ៍: 6742123456789'
-      };
-    }
-    
-    // PUBG Mobile - Character ID
-    if (normalizedName.includes('pubg')) {
-      return {
-        fields: [
-          { key: 'userId', label: 'Character ID', placeholder: 'បញ្ចូល Character ID' }
-        ],
-        validation: 'សូមបញ្ចូល Character ID',
-        example: 'ឧទាហរណ៍: 5123456789'
-      };
-    }
-    
-    // Blood Strike / Bloodstrike - Player ID
-    if (normalizedName.includes('blood strike') || normalizedName.includes('bloodstrike')) {
-      return {
-        fields: [
-          { key: 'userId', label: 'Player ID', placeholder: 'បញ្ចូល Player ID' }
-        ],
-        validation: 'សូមបញ្ចូល Player ID',
-        example: 'ឧទាហរណ៍: 123456789'
-      };
-    }
-    
-    // Delta Force - Player ID
-    if (normalizedName.includes('delta force')) {
-      return {
-        fields: [
-          { key: 'userId', label: 'Player ID', placeholder: 'បញ្ចូល Player ID' }
-        ],
-        validation: 'សូមបញ្ចូល Player ID',
-        example: 'ឧទាហរណ៍: 123456789'
-      };
-    }
-    
-    // Identity V - Player ID + Server
-    if (normalizedName.includes('identity v')) {
-      return {
-        fields: [
-          { key: 'userId', label: 'Player ID', placeholder: 'បញ្ចូល Player ID' },
-          { key: 'serverId', label: 'Server', placeholder: 'Server', width: 'w-24 sm:w-32' }
-        ],
-        validation: 'សូមបញ្ចូល Player ID និង Server',
-        example: 'ឧទាហរណ៍: 12345678 (Asia)'
-      };
-    }
-    
-    // Sausage Man - Player ID
-    if (normalizedName.includes('sausage man')) {
-      return {
-        fields: [
-          { key: 'userId', label: 'Player ID', placeholder: 'បញ្ចូល Player ID' }
-        ],
-        validation: 'សូមបញ្ចូល Player ID',
-        example: 'ឧទាហរណ៍: 123456789'
-      };
-    }
-    
-    // Undawn - Player ID + Server
-    if (normalizedName.includes('undawn')) {
-      return {
-        fields: [
-          { key: 'userId', label: 'Player ID', placeholder: 'បញ្ចូល Player ID' },
-          { key: 'serverId', label: 'Server', placeholder: 'Server', width: 'w-32' }
-        ],
-        validation: 'សូមបញ្ចូល Player ID និង Server',
-        example: 'ឧទាហរណ៍: 12345678 (SEA-01)'
-      };
-    }
-    
-    // EAFC / EA FC / FIFA - EA ID or Player ID
-    if (normalizedName.includes('eafc') || normalizedName.includes('ea fc') || normalizedName.includes('fifa')) {
-      return {
-        fields: [
-          { key: 'userId', label: 'Player ID', placeholder: 'បញ្ចូល Player ID' }
-        ],
-        validation: 'សូមបញ្ចូល Player ID',
-        example: 'ឧទាហរណ៍: 123456789'
-      };
-    }
-    
-    // Yalla Ludo - Player ID
-    if (normalizedName.includes('yalla ludo')) {
-      return {
-        fields: [
-          { key: 'userId', label: 'Player ID', placeholder: 'បញ្ចូល Player ID' }
-        ],
-        validation: 'សូមបញ្ចូល Player ID',
-        example: 'ឧទាហរណ៍: 123456789'
-      };
-    }
-    
-    // Zepeto - ZEPETO ID
-    if (normalizedName.includes('zepeto')) {
-      return {
-        fields: [
-          { key: 'userId', label: 'ZEPETO ID', placeholder: 'បញ្ចូល ZEPETO ID' }
-        ],
-        validation: 'សូមបញ្ចូល ZEPETO ID',
-        example: 'ឧទាហរណ៍: abc123xyz'
-      };
-    }
-    
-    // Poppo Live - User ID
-    if (normalizedName.includes('poppo live')) {
-      return {
-        fields: [
-          { key: 'userId', label: 'User ID', placeholder: 'បញ្ចូល User ID' }
-        ],
-        validation: 'សូមបញ្ចូល User ID',
-        example: 'ឧទាហរណ៍: 123456789'
-      };
-    }
-    
-    // Blockman Go - Player ID
-    if (normalizedName.includes('blockman go')) {
-      return {
-        fields: [
-          { key: 'userId', label: 'Player ID', placeholder: 'បញ្ចូល Player ID' }
-        ],
-        validation: 'សូមបញ្ចូល Player ID',
-        example: 'ឧទាហរណ៍: 123456789'
-      };
-    }
-    
-    // Pixel Gun 3D - Player ID
-    if (normalizedName.includes('pixel gun')) {
-      return {
-        fields: [
-          { key: 'userId', label: 'Player ID', placeholder: 'បញ្ចូល Player ID' }
-        ],
-        validation: 'សូមបញ្ចូល Player ID',
-        example: 'ឧទាហរណ៍: 123456789'
-      };
-    }
-    
-    // Bullet Echo - Player ID
-    if (normalizedName.includes('bullet echo')) {
-      return {
-        fields: [
-          { key: 'userId', label: 'Player ID', placeholder: 'បញ្ចូល Player ID' }
-        ],
-        validation: 'សូមបញ្ចូល Player ID',
-        example: 'ឧទាហរណ៍: 123456789'
-      };
-    }
-    
-    // Ragnarok games - Character ID + Server
-    if (normalizedName.includes('ragnarok')) {
-      return {
-        fields: [
-          { key: 'userId', label: 'Character ID', placeholder: 'បញ្ចូល Character ID' },
-          { key: 'serverId', label: 'Server', placeholder: 'Server', width: 'w-32' }
-        ],
-        validation: 'សូមបញ្ចូល Character ID និង Server',
-        example: 'ឧទាហរណ៍: 12345678 (Prontera)'
-      };
-    }
-    
-    // Solo Leveling: Arise - Player ID
-    if (normalizedName.includes('solo leveling')) {
-      return {
-        fields: [
-          { key: 'userId', label: 'Player ID', placeholder: 'បញ្ចូល Player ID' }
-        ],
-        validation: 'សូមបញ្ចូល Player ID',
-        example: 'ឧទាហរណ៍: 123456789'
-      };
-    }
-    
-    // AFK Journey - Player ID
-    if (normalizedName.includes('afk journey')) {
-      return {
-        fields: [
-          { key: 'userId', label: 'Player ID', placeholder: 'បញ្ចូល Player ID' }
-        ],
-        validation: 'សូមបញ្ចូល Player ID',
-        example: 'ឧទាហរណ៍: 123456789'
-      };
-    }
-    
-    // Age of Empires Mobile - Player ID
-    if (normalizedName.includes('age of empire')) {
-      return {
-        fields: [
-          { key: 'userId', label: 'Player ID', placeholder: 'បញ្ចូល Player ID' }
-        ],
-        validation: 'សូមបញ្ចូល Player ID',
-        example: 'ឧទាហរណ៍: 123456789'
-      };
-    }
-    
-    // State of Survival - Player ID + State
-    if (normalizedName.includes('state of survival')) {
-      return {
-        fields: [
-          { key: 'userId', label: 'Player ID', placeholder: 'បញ្ចូល Player ID' },
-          { key: 'serverId', label: 'State', placeholder: 'State #', width: 'w-24 sm:w-32' }
-        ],
-        validation: 'សូមបញ្ចូល Player ID និង State',
-        example: 'ឧទាហរណ៍: 12345678 (State 123)'
-      };
-    }
-    
-    // Puzzles and Survival - Player ID + State
-    if (normalizedName.includes('puzzles and survival')) {
-      return {
-        fields: [
-          { key: 'userId', label: 'Player ID', placeholder: 'បញ្ចូល Player ID' },
-          { key: 'serverId', label: 'State', placeholder: 'State #', width: 'w-24 sm:w-32' }
-        ],
-        validation: 'សូមបញ្ចូល Player ID និង State',
-        example: 'ឧទាហរណ៍: 12345678 (State 123)'
-      };
-    }
-    
-    // Lord of the Rings - Player ID
-    if (normalizedName.includes('lord of the rings')) {
-      return {
-        fields: [
-          { key: 'userId', label: 'Player ID', placeholder: 'បញ្ចូល Player ID' }
-        ],
-        validation: 'សូមបញ្ចូល Player ID',
-        example: 'ឧទាហរណ៍: 123456789'
-      };
-    }
-    
-    // Love and Deepspace - UID
-    if (normalizedName.includes('love and deepspace')) {
-      return {
-        fields: [
-          { key: 'userId', label: 'UID', placeholder: 'បញ្ចូល UID' }
-        ],
-        validation: 'សូមបញ្ចូល UID',
-        example: 'ឧទាហរណ៍: 123456789'
-      };
-    }
-    
-    // Love Nikki / Shining Nikki - Player ID
-    if (normalizedName.includes('nikki')) {
-      return {
-        fields: [
-          { key: 'userId', label: 'Player ID', placeholder: 'បញ្ចូល Player ID' }
-        ],
-        validation: 'សូមបញ្ចូល Player ID',
-        example: 'ឧទាហរណ៍: 123456789'
-      };
-    }
-    
-    // Life Makeover - Player ID
-    if (normalizedName.includes('life makeover')) {
-      return {
-        fields: [
-          { key: 'userId', label: 'Player ID', placeholder: 'បញ្ចូល Player ID' }
-        ],
-        validation: 'សូមបញ្ចូល Player ID',
-        example: 'ឧទាហរណ៍: 123456789'
-      };
-    }
-    
-    // Crystal of Atlan - Player ID
-    if (normalizedName.includes('crystal of atlan')) {
-      return {
-        fields: [
-          { key: 'userId', label: 'Player ID', placeholder: 'បញ្ចូល Player ID' }
-        ],
-        validation: 'សូមបញ្ចូល Player ID',
-        example: 'ឧទាហរណ៍: 123456789'
-      };
-    }
-    
-    // Devil May Cry - Player ID
-    if (normalizedName.includes('devil may cry')) {
-      return {
-        fields: [
-          { key: 'userId', label: 'Player ID', placeholder: 'បញ្ចូល Player ID' }
-        ],
-        validation: 'សូមបញ្ចូល Player ID',
-        example: 'ឧទាហរណ៍: 123456789'
-      };
-    }
-    
-    // Metal Slug - Player ID
-    if (normalizedName.includes('metal slug')) {
-      return {
-        fields: [
-          { key: 'userId', label: 'Player ID', placeholder: 'បញ្ចូល Player ID' }
-        ],
-        validation: 'សូមបញ្ចូល Player ID',
-        example: 'ឧទាហរណ៍: 123456789'
-      };
-    }
-    
-    // Marvel Duel - Player ID
-    if (normalizedName.includes('marvel duel')) {
-      return {
-        fields: [
-          { key: 'userId', label: 'Player ID', placeholder: 'បញ្ចូល Player ID' }
-        ],
-        validation: 'សូមបញ្ចូល Player ID',
-        example: 'ឧទាហរណ៍: 123456789'
-      };
-    }
-    
-    // One Punch Man World - Player ID
-    if (normalizedName.includes('one punch man')) {
-      return {
-        fields: [
-          { key: 'userId', label: 'Player ID', placeholder: 'បញ្ចូល Player ID' }
-        ],
-        validation: 'សូមបញ្ចូល Player ID',
-        example: 'ឧទាហរណ៍: 123456789'
-      };
-    }
-    
-    // Path to Nowhere - Player ID + Server
-    if (normalizedName.includes('path to nowhere')) {
-      return {
-        fields: [
-          { key: 'userId', label: 'Player ID', placeholder: 'បញ្ចូល Player ID' },
-          { key: 'serverId', label: 'Server', placeholder: 'Server', width: 'w-24 sm:w-32' }
-        ],
-        validation: 'សូមបញ្ចូល Player ID និង Server',
-        example: 'ឧទាហរណ៍: 12345678 (SEA)'
-      };
-    }
-    
-    // Moonlight Blade - Character ID + Server
-    if (normalizedName.includes('moonlight blade')) {
-      return {
-        fields: [
-          { key: 'userId', label: 'Character ID', placeholder: 'បញ្ចូល Character ID' },
-          { key: 'serverId', label: 'Server', placeholder: 'Server', width: 'w-32' }
-        ],
-        validation: 'សូមបញ្ចូល Character ID និង Server',
-        example: 'ឧទាហរណ៍: 12345678 (Server)'
-      };
-    }
-    
-    // Heaven Burns Red - Player ID
-    if (normalizedName.includes('heaven burns red')) {
-      return {
-        fields: [
-          { key: 'userId', label: 'Player ID', placeholder: 'បញ្ចូល Player ID' }
-        ],
-        validation: 'សូមបញ្ចូល Player ID',
-        example: 'ឧទាហរណ៍: 123456789'
-      };
-    }
-    
-    // Star Resonance - Player ID
-    if (normalizedName.includes('star resonance')) {
-      return {
-        fields: [
-          { key: 'userId', label: 'Player ID', placeholder: 'បញ្ចូល Player ID' }
-        ],
-        validation: 'សូមបញ្ចូល Player ID',
-        example: 'ឧទាហរណ៍: 123456789'
-      };
-    }
-    
-    // Deadly Dudes - Player ID
-    if (normalizedName.includes('deadly dudes')) {
-      return {
-        fields: [
-          { key: 'userId', label: 'Player ID', placeholder: 'បញ្ចូល Player ID' }
-        ],
-        validation: 'សូមបញ្ចូល Player ID',
-        example: 'ឧទាហរណ៍: 123456789'
-      };
-    }
-    
-    // Rememento - Player ID
-    if (normalizedName.includes('rememento')) {
-      return {
-        fields: [
-          { key: 'userId', label: 'Player ID', placeholder: 'បញ្ចូល Player ID' }
-        ],
-        validation: 'សូមបញ្ចូល Player ID',
-        example: 'ឧទាហរណ៍: 123456789'
-      };
-    }
-    
-    // Valorant Global / Valorant SEA - Riot ID format
-    if (normalizedName.includes('valorant')) {
-      return {
-        fields: [
-          { key: 'userId', label: 'Riot ID', placeholder: 'Name#Tag' }
-        ],
-        validation: 'សូមបញ្ចូល Riot ID',
-        example: 'ឧទាហរណ៍: PlayerName#1234'
-      };
-    }
-    
-    // Wild Rift - Riot ID + Region
-    if (normalizedName.includes('wild rift')) {
-      return {
-        fields: [
-          { key: 'userId', label: 'Riot ID', placeholder: 'Name#Tag' }
-        ],
-        validation: 'សូមបញ្ចូល Riot ID',
-        example: 'ឧទាហរណ៍: Player#SEA1'
-      };
-    }
-    
-    // Zenless Zone Zero - UID + Server
-    if (normalizedName.includes('zenless zone zero') || normalizedName === 'zzz') {
-      return {
-        fields: [
-          { key: 'userId', label: 'UID', placeholder: 'បញ្ចូល UID' },
-          { key: 'serverId', label: 'Server', placeholder: 'Server', width: 'w-32' }
-        ],
-        validation: 'សូមបញ្ចូល UID និង Server',
-        example: 'ឧទាហរណ៍: 1234567890 (Asia)'
-      };
-    }
-    
-    // Wuthering Waves - UID + Server
-    if (normalizedName.includes('wuthering waves')) {
-      return {
-        fields: [
-          { key: 'userId', label: 'UID', placeholder: 'បញ្ចូល UID' },
-          { key: 'serverId', label: 'Server', placeholder: 'Server', width: 'w-32' }
-        ],
-        validation: 'សូមបញ្ចូល UID និង Server',
-        example: 'ឧទាហរណ៍: 1234567890 (SEA)'
-      };
-    }
-    
-    // TikTok Coins - TikTok Username
-    if (normalizedName.includes('tiktok')) {
-      return {
-        fields: [
-          { key: 'userId', label: 'TikTok Username', placeholder: '@username' }
-        ],
-        validation: 'សូមបញ្ចូល TikTok Username',
-        example: 'ឧទាហរណ៍: @yourusername'
-      };
-    }
-    
-    // Tower of Fantasy - UID + Server
-    if (normalizedName.includes('tower of fantasy') || normalizedName === 'tof') {
-      return {
-        fields: [
-          { key: 'userId', label: 'UID', placeholder: 'បញ្ចូល UID' },
-          { key: 'serverId', label: 'Server', placeholder: 'Server', width: 'w-32' }
-        ],
-        validation: 'សូមបញ្ចូល UID និង Server',
-        example: 'ឧទាហរណ៍: 1234567890 (SEA-Fantasia)'
-      };
-    }
-    
-    // Honkai Star Rail - UID + Server
-    if (normalizedName.includes('honkai star rail') || normalizedName === 'hsr') {
-      return {
-        fields: [
-          { key: 'userId', label: 'UID', placeholder: 'បញ្ចូល UID' },
-          { key: 'serverId', label: 'Server', placeholder: 'Server', width: 'w-32' }
-        ],
-        validation: 'សូមបញ្ចូល UID និង Server',
-        example: 'ឧទាហរណ៍: 8001234567 (Asia)'
-      };
-    }
-    
-    // Genshin Impact - UID + Server
-    if (normalizedName.includes('genshin impact') || normalizedName === 'genshin') {
-      return {
-        fields: [
-          { key: 'userId', label: 'UID', placeholder: 'បញ្ចូល UID' },
-          { key: 'serverId', label: 'Server', placeholder: 'Server', width: 'w-32' }
-        ],
-        validation: 'សូមបញ្ចូល UID និង Server',
-        example: 'ឧទាហរណ៍: 8001234567 (Asia)'
-      };
-    }
-    
-    // Honkai Impact 3rd - UID + Server
-    if (normalizedName.includes('honkai impact') || normalizedName === 'hi3') {
-      return {
-        fields: [
-          { key: 'userId', label: 'UID', placeholder: 'បញ្ចូល UID' },
-          { key: 'serverId', label: 'Server', placeholder: 'Server', width: 'w-32' }
-        ],
-        validation: 'សូមបញ្ចូល UID និង Server',
-        example: 'ឧទាហរណ៍: 12345678 (SEA)'
-      };
-    }
-    
-    // Clash of Clans - Player Tag
-    if (normalizedName.includes('clash of clans') || normalizedName === 'coc') {
-      return {
-        fields: [
-          { key: 'userId', label: 'Player Tag', placeholder: '#ABC123' }
-        ],
-        validation: 'សូមបញ្ចូល Player Tag',
-        example: 'ឧទាហរណ៍: #ABC123XY'
-      };
-    }
-    
-    // Clash Royale - Player Tag
-    if (normalizedName.includes('clash royale')) {
-      return {
-        fields: [
-          { key: 'userId', label: 'Player Tag', placeholder: '#ABC123' }
-        ],
-        validation: 'សូមបញ្ចូល Player Tag',
-        example: 'ឧទាហរណ៍: #ABC123XY'
-      };
-    }
-    
-    // Brawl Stars - Player Tag
-    if (normalizedName.includes('brawl stars')) {
-      return {
-        fields: [
-          { key: 'userId', label: 'Player Tag', placeholder: '#ABC123' }
-        ],
-        validation: 'សូមបញ្ចូល Player Tag',
-        example: 'ឧទាហរណ៍: #ABC123XY'
-      };
-    }
-    
-    // Steam Wallet - Steam ID
-    if (normalizedName.includes('steam')) {
-      return {
-        fields: [
-          { key: 'userId', label: 'Steam ID', placeholder: 'បញ្ចូល Steam ID' }
-        ],
-        validation: 'សូមបញ្ចូល Steam ID',
-        example: 'ឧទាហរណ៍: 76561198012345678'
-      };
-    }
-    
-    // Discord Nitro - Discord Username
-    if (normalizedName.includes('discord')) {
-      return {
-        fields: [
-          { key: 'userId', label: 'Discord Username', placeholder: 'username#0000' }
-        ],
-        validation: 'សូមបញ្ចូល Discord Username',
-        example: 'ឧទាហរណ៍: player#1234 ឬ @player'
-      };
-    }
-    
-    // Roblox - Roblox Username
-    if (normalizedName.includes('roblox')) {
-      return {
-        fields: [
-          { key: 'userId', label: 'Roblox Username', placeholder: 'បញ្ចូល Username' }
-        ],
-        validation: 'សូមបញ្ចូល Roblox Username',
-        example: 'ឧទាហរណ៍: YourRobloxName'
-      };
-    }
-    
-    // Fortnite - Epic Games ID
-    if (normalizedName.includes('fortnite')) {
-      return {
-        fields: [
-          { key: 'userId', label: 'Epic Games ID', placeholder: 'បញ្ចូល Epic ID' }
-        ],
-        validation: 'សូមបញ្ចូល Epic Games ID',
-        example: 'ឧទាហរណ៍: EpicUsername'
-      };
-    }
-    
-    // Arena of Valor / Liên Quân - Player ID + Server
-    if (normalizedName.includes('arena of valor') || normalizedName === 'aov' || normalizedName.includes('liên quân')) {
-      return {
-        fields: [
-          { key: 'userId', label: 'Player ID', placeholder: 'បញ្ចូល Player ID' },
-          { key: 'serverId', label: 'Server', placeholder: 'Server', width: 'w-32' }
-        ],
-        validation: 'សូមបញ្ចូល Player ID និង Server',
-        example: 'ឧទាហរណ៍: 12345678 (SEA)'
-      };
-    }
-    
-    // Stumble Guys - Player ID
-    if (normalizedName.includes('stumble guys')) {
-      return {
-        fields: [
-          { key: 'userId', label: 'Player ID', placeholder: 'បញ្ចូល Player ID' }
-        ],
-        validation: 'សូមបញ្ចូល Player ID',
-        example: 'ឧទាហរណ៍: 123456789'
-      };
-    }
-    
-    // Whiteout Survival - Player ID + State
-    if (normalizedName.includes('whiteout survival')) {
-      return {
-        fields: [
-          { key: 'userId', label: 'Player ID', placeholder: 'បញ្ចូល Player ID' },
-          { key: 'serverId', label: 'State', placeholder: 'State #', width: 'w-24 sm:w-32' }
-        ],
-        validation: 'សូមបញ្ចូល Player ID និង State',
-        example: 'ឧទាហរណ៍: 12345678 (State 123)'
-      };
-    }
-    
-    // Last War: Survival - Player ID + Server
-    if (normalizedName.includes('last war')) {
-      return {
-        fields: [
-          { key: 'userId', label: 'Player ID', placeholder: 'បញ្ចូល Player ID' },
-          { key: 'serverId', label: 'Server', placeholder: 'Server', width: 'w-24 sm:w-32' }
-        ],
-        validation: 'សូមបញ្ចូល Player ID និង Server',
-        example: 'ឧទាហរណ៍: 12345678 (S123)'
-      };
-    }
-
-    // Default configuration for other games
+    // Single field - no zone required
     return {
-      fields: [{ key: 'userId', label: 'Player ID', placeholder: 'បញ្ចូល Player ID' }],
-      validation: 'សូមបញ្ចូល Player ID',
-      example: 'ឧទាហរណ៍: 123456789'
+      fields: [{ key: 'userId', label: labels.userLabel, placeholder: labels.userPlaceholder }],
+      validation: `សូមបញ្ចូល ${labels.userLabel}`,
+      example: labels.example
     };
   };
 
