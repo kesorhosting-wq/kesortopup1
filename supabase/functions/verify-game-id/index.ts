@@ -269,8 +269,16 @@ serve(async (req) => {
           },
         });
         
-        const data = await response.json();
-        console.log('RapidAPI response:', JSON.stringify(data));
+        const responseText = await response.text();
+        console.log('RapidAPI raw response:', responseText, 'Status:', response.status);
+        
+        let data;
+        try {
+          data = JSON.parse(responseText);
+        } catch (parseError) {
+          console.error('Failed to parse RapidAPI response:', parseError);
+          throw new Error('Invalid response from RapidAPI');
+        }
         
         // Parse response - check various formats
         if (data.success === true || data.status === true || data.data) {
