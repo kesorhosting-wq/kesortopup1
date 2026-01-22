@@ -6,8 +6,11 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Raphael AI - Free unlimited image generation using FLUX.1-Dev model
-const RAPHAEL_API_URL = 'https://api.raphael.app/v1/generate';
+// Pollinations.ai - Free unlimited image generation, no API key required
+function getPollinationsUrl(prompt: string, width = 512, height = 512): string {
+  const encodedPrompt = encodeURIComponent(prompt);
+  return `https://image.pollinations.ai/prompt/${encodedPrompt}?width=${width}&height=${height}&nologo=true`;
+}
 
 // Game currency mappings for realistic icons
 const GAME_CURRENCY_MAP: Record<string, { currency: string; icon: string; colors: string }> = {
@@ -45,7 +48,6 @@ function getGameCurrencyInfo(gameName: string): { currency: string; icon: string
       return value;
     }
   }
-  // Default for unknown games
   return { currency: 'Coins', icon: 'golden coins', colors: 'gold, silver, bronze' };
 }
 
@@ -54,37 +56,26 @@ function generatePromptForPackage(gameName: string, packageName: string, amount:
   const lowerPackage = packageName.toLowerCase();
   const lowerAmount = amount.toLowerCase();
   
-  // Detect if it's a special item (card, pass, bundle, subscription)
   const isCard = lowerPackage.includes('card') || lowerPackage.includes('pass') || lowerAmount.includes('card') || lowerAmount.includes('pass');
   const isBundle = lowerPackage.includes('bundle') || lowerAmount.includes('bundle');
   const isSubscription = lowerPackage.includes('subscription') || lowerPackage.includes('monthly') || lowerAmount.includes('subscription') || lowerAmount.includes('monthly');
   const isWeekly = lowerPackage.includes('weekly') || lowerAmount.includes('weekly');
   
   if (isCard || isSubscription || isWeekly) {
-    return `Create a premium game subscription/pass card icon for ${gameName}. 
-Style: Glossy card with VIP/premium design, ${currencyInfo.colors} color scheme.
-Features: Shiny metallic border, glowing effects, premium badge, game-themed decorations.
-No text or numbers. Square icon format, mobile game quality, highly detailed 3D render.`;
+    return `Premium VIP game pass card icon, glossy metallic border, ${currencyInfo.colors} colors, shiny premium badge, glowing effects, square format, mobile game quality, 3D render, no text`;
   }
   
   if (isBundle) {
-    return `Create a game bundle/package icon for ${gameName}.
-Style: Multiple items stacked together - ${currencyInfo.icon} with bonus items, gift box design.
-Colors: ${currencyInfo.colors} with golden accents.
-No text or numbers. Square icon format, mobile game quality, highly detailed 3D render.`;
+    return `Game bundle package icon with ${currencyInfo.icon}, gift box design, ${currencyInfo.colors} colors with golden accents, square format, mobile game quality, 3D render, no text`;
   }
   
-  // Regular currency package - detect amount size for visual scaling
   const numericAmount = parseInt(amount.replace(/\D/g, '')) || 0;
   let sizeDescription = 'small pile';
   if (numericAmount >= 1000) sizeDescription = 'large pile';
   if (numericAmount >= 5000) sizeDescription = 'massive treasure pile';
   if (numericAmount >= 10000) sizeDescription = 'overflowing treasure chest';
   
-  return `Create a ${gameName} in-game currency icon showing ${sizeDescription} of ${currencyInfo.icon}.
-Style: Premium mobile game quality, ${currencyInfo.colors} color scheme.
-Features: Glossy 3D gems/coins, sparkle effects, glowing aura, game-themed.
-No text or numbers. Square icon format, highly detailed 3D render, app store quality.`;
+  return `${sizeDescription} of ${currencyInfo.icon}, ${currencyInfo.colors} colors, glossy 3D gems coins, sparkle effects, glowing aura, square icon, mobile game quality, highly detailed 3D render, no text`;
 }
 
 serve(async (req) => {
@@ -105,59 +96,27 @@ serve(async (req) => {
     console.log(`[GeneratePackageIcon] Generating for: ${gameName} - ${packageName}`);
 
     const prompt = generatePromptForPackage(gameName, packageName, amount || packageName);
-    console.log(`[GeneratePackageIcon] Using Raphael AI (Free Unlimited)`);
+    console.log(`[GeneratePackageIcon] Using Pollinations.ai (Free Unlimited)`);
 
-    // Call Raphael AI for free unlimited image generation
-    const response = await fetch(RAPHAEL_API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        prompt: prompt,
-        width: 512,
-        height: 512,
-        num_images: 1
-      })
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`[GeneratePackageIcon] Raphael API error: ${response.status} - ${errorText}`);
-      throw new Error(`Raphael AI error: ${response.status}`);
+    // Get image URL from Pollinations
+    const imageUrl = getPollinationsUrl(prompt, 512, 512);
+    
+    // Download the generated image
+    const imageResponse = await fetch(imageUrl);
+    
+    if (!imageResponse.ok) {
+      console.error(`[GeneratePackageIcon] Pollinations error: ${imageResponse.status}`);
+      throw new Error(`Image generation failed: ${imageResponse.status}`);
     }
 
-    const data = await response.json();
-    
-    // Extract the image URL from Raphael AI response
-    const imageUrl = data.image_url || data.images?.[0]?.url || data.output?.url;
-    
-    if (!imageUrl) {
-      console.error('[GeneratePackageIcon] No image in response:', JSON.stringify(data));
-      throw new Error('No image generated');
-    }
+    const imageBuffer = new Uint8Array(await imageResponse.arrayBuffer());
+    console.log(`[GeneratePackageIcon] Image downloaded, size: ${imageBuffer.length} bytes`);
 
     // Upload to storage
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    let imageBuffer: Uint8Array;
-    
-    if (imageUrl.startsWith('data:')) {
-      // Handle base64 image
-      const base64Data = imageUrl.replace(/^data:image\/\w+;base64,/, '');
-      imageBuffer = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
-    } else {
-      // Handle URL - download the image
-      const imageResponse = await fetch(imageUrl);
-      if (!imageResponse.ok) {
-        throw new Error('Failed to download generated image');
-      }
-      const arrayBuffer = await imageResponse.arrayBuffer();
-      imageBuffer = new Uint8Array(arrayBuffer);
-    }
-    
     const fileName = `packages/${packageId}-${Date.now()}.png`;
     
     const { error: uploadError } = await supabase.storage
@@ -181,7 +140,6 @@ serve(async (req) => {
 
     const publicUrl = urlData.publicUrl;
 
-    // Update the package record
     const tableName = isSpecialPackage ? 'special_packages' : 'packages';
     const { error: updateError } = await supabase
       .from(tableName)
