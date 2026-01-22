@@ -1,20 +1,28 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { Game } from '@/contexts/SiteContext';
 import ModernGameCard from './ModernGameCard';
 import SectionHeader from './SectionHeader';
-import { Gamepad2 } from 'lucide-react';
+import { Gamepad2, Search, X } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 
 interface AllGamesSectionProps {
   games: Game[];
 }
 
 const AllGamesSection: React.FC<AllGamesSectionProps> = ({ games }) => {
-  // Sort games alphabetically A-Z by name
-  const sortedGames = [...games].sort((a, b) => 
-    a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
-  );
-  
-  if (sortedGames.length === 0) return null;
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Filter and sort games
+  const filteredAndSortedGames = useMemo(() => {
+    const filtered = games.filter(game =>
+      game.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+    return filtered.sort((a, b) =>
+      a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
+    );
+  }, [games, searchQuery]);
+
+  if (games.length === 0) return null;
   
   return (
     <section className="container mx-auto px-3 sm:px-4 py-6 sm:py-10">
@@ -23,16 +31,50 @@ const AllGamesSection: React.FC<AllGamesSectionProps> = ({ games }) => {
         subtitle="Browse our complete collection"
         icon={Gamepad2}
       />
+
+      {/* Search input */}
+      <div className="max-w-md mx-auto mb-6">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            type="text"
+            placeholder="Search games..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10 pr-10 bg-background/80 backdrop-blur-sm border-border/50"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </div>
+        {searchQuery && (
+          <p className="text-sm text-muted-foreground text-center mt-2">
+            Found {filteredAndSortedGames.length} game{filteredAndSortedGames.length !== 1 ? 's' : ''}
+          </p>
+        )}
+      </div>
       
       {/* All games grid - 2 cols mobile, 3 cols tablet, 4-5 cols desktop */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-5 lg:gap-6 max-w-6xl mx-auto">
-        {sortedGames.map((game) => (
-          <ModernGameCard 
-            key={game.id} 
-            game={game}
-          />
-        ))}
-      </div>
+      {filteredAndSortedGames.length > 0 ? (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-5 lg:gap-6 max-w-6xl mx-auto">
+          {filteredAndSortedGames.map((game) => (
+            <ModernGameCard 
+              key={game.id} 
+              game={game}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-12">
+          <Gamepad2 className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
+          <p className="text-muted-foreground">No games found matching "{searchQuery}"</p>
+        </div>
+      )}
     </section>
   );
 };
