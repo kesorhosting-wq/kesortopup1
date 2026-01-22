@@ -4,11 +4,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Download, Database, Loader2, CheckCircle, XCircle, FileJson } from 'lucide-react';
+import { Download, Database, Loader2, CheckCircle, XCircle, FileJson, FileCode } from 'lucide-react';
 
 type TableStatus = 'pending' | 'loading' | 'done' | 'error';
+type ExportFormat = 'json' | 'sql';
 
 interface TableConfig {
   name: string;
@@ -39,10 +41,93 @@ const CATEGORIES = [
   { id: 'config', label: 'Configuration', description: 'Settings & API configs' },
 ];
 
+// Convert value to MySQL-compatible SQL string
+const toMySQLValue = (value: any): string => {
+  if (value === null || value === undefined) {
+    return 'NULL';
+  }
+  if (typeof value === 'boolean') {
+    return value ? '1' : '0';
+  }
+  if (typeof value === 'number') {
+    return String(value);
+  }
+  if (value instanceof Date) {
+    return `'${value.toISOString().slice(0, 19).replace('T', ' ')}'`;
+  }
+  if (typeof value === 'object') {
+    // JSON objects/arrays - escape and wrap in quotes
+    const jsonStr = JSON.stringify(value).replace(/'/g, "''").replace(/\\/g, '\\\\');
+    return `'${jsonStr}'`;
+  }
+  // String - escape single quotes
+  const escaped = String(value).replace(/'/g, "''").replace(/\\/g, '\\\\');
+  return `'${escaped}'`;
+};
+
+// Convert PostgreSQL column name to MySQL-safe backtick format
+const toMySQLColumn = (col: string): string => {
+  return `\`${col}\``;
+};
+
+// Generate MySQL INSERT statements for a table
+const generateMySQLInserts = (tableName: string, rows: any[]): string => {
+  if (!rows || rows.length === 0) {
+    return `-- No data in table: ${tableName}\n`;
+  }
+
+  const columns = Object.keys(rows[0]);
+  const columnList = columns.map(toMySQLColumn).join(', ');
+  
+  let sql = `-- Table: ${tableName}\n`;
+  sql += `-- Rows: ${rows.length}\n`;
+  sql += `-- Generated: ${new Date().toISOString()}\n\n`;
+  
+  // Generate INSERT statements in batches of 100 for performance
+  const batchSize = 100;
+  for (let i = 0; i < rows.length; i += batchSize) {
+    const batch = rows.slice(i, i + batchSize);
+    
+    sql += `INSERT INTO \`${tableName}\` (${columnList}) VALUES\n`;
+    
+    const valueRows = batch.map(row => {
+      const values = columns.map(col => toMySQLValue(row[col]));
+      return `  (${values.join(', ')})`;
+    });
+    
+    sql += valueRows.join(',\n');
+    sql += ';\n\n';
+  }
+  
+  return sql;
+};
+
+// Generate full MySQL export file
+const generateMySQLExport = (data: Record<string, any[]>): string => {
+  let sql = `-- =====================================================\n`;
+  sql += `-- MySQL/MariaDB Database Export\n`;
+  sql += `-- Generated: ${new Date().toISOString()}\n`;
+  sql += `-- Source: Lovable Cloud (PostgreSQL)\n`;
+  sql += `-- =====================================================\n\n`;
+  sql += `SET NAMES utf8mb4;\n`;
+  sql += `SET FOREIGN_KEY_CHECKS = 0;\n\n`;
+  
+  for (const [tableName, rows] of Object.entries(data)) {
+    if (tableName === '_metadata') continue;
+    sql += generateMySQLInserts(tableName, rows);
+  }
+  
+  sql += `SET FOREIGN_KEY_CHECKS = 1;\n`;
+  sql += `\n-- Export complete\n`;
+  
+  return sql;
+};
+
 export function DataExportTab() {
   const [selectedTables, setSelectedTables] = useState<string[]>(TABLES.map(t => t.name));
   const [tableStatus, setTableStatus] = useState<Record<string, TableStatus>>({});
   const [isExporting, setIsExporting] = useState(false);
+  const [exportFormat, setExportFormat] = useState<ExportFormat>('json');
 
   const toggleTable = (tableName: string) => {
     setSelectedTables(prev =>
@@ -98,7 +183,7 @@ export function DataExportTab() {
       _metadata: {
         exportedAt: new Date().toISOString(),
         source: 'Lovable Cloud (PostgreSQL)',
-        targetFormat: 'MySQL/MariaDB Compatible',
+        targetFormat: exportFormat === 'sql' ? 'MySQL/MariaDB SQL' : 'JSON',
         tables: {},
       },
     };
@@ -126,19 +211,31 @@ export function DataExportTab() {
         }
       }
 
-      // Generate and download JSON file
-      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+      // Generate file based on format
+      let blob: Blob;
+      let filename: string;
+      const dateStr = new Date().toISOString().split('T')[0];
+
+      if (exportFormat === 'sql') {
+        const sqlContent = generateMySQLExport(exportData);
+        blob = new Blob([sqlContent], { type: 'text/sql' });
+        filename = `database-export-${dateStr}.sql`;
+      } else {
+        blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+        filename = `database-export-${dateStr}.json`;
+      }
+
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `database-export-${new Date().toISOString().split('T')[0]}.json`;
+      link.download = filename;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
 
       const successCount = Object.values(tableStatus).filter(s => s === 'done').length;
-      toast.success(`Exported ${successCount} tables successfully!`);
+      toast.success(`Exported ${successCount} tables as ${exportFormat.toUpperCase()}!`);
     } catch (error) {
       console.error('Export failed:', error);
       toast.error('Export failed. Check console for details.');
@@ -169,11 +266,36 @@ export function DataExportTab() {
             Data Export
           </CardTitle>
           <CardDescription>
-            Export your database tables as JSON for backup or MySQL migration.
+            Export your database tables as JSON or MySQL SQL for backup or migration.
             Sensitive credentials will be automatically redacted.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
+          {/* Export Format Selection */}
+          <div className="space-y-3">
+            <h4 className="text-sm font-medium">Export Format</h4>
+            <RadioGroup
+              value={exportFormat}
+              onValueChange={(value) => setExportFormat(value as ExportFormat)}
+              className="flex gap-4"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="json" id="format-json" />
+                <Label htmlFor="format-json" className="flex items-center gap-2 cursor-pointer">
+                  <FileJson className="h-4 w-4" />
+                  JSON
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="sql" id="format-sql" />
+                <Label htmlFor="format-sql" className="flex items-center gap-2 cursor-pointer">
+                  <FileCode className="h-4 w-4" />
+                  MySQL SQL
+                </Label>
+              </div>
+            </RadioGroup>
+          </div>
+
           {/* Category Selection */}
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             {CATEGORIES.map(category => {
@@ -246,7 +368,7 @@ export function DataExportTab() {
               ) : (
                 <Download className="h-4 w-4" />
               )}
-              {isExporting ? 'Exporting...' : 'Export Selected Tables'}
+              {isExporting ? 'Exporting...' : `Export as ${exportFormat.toUpperCase()}`}
             </Button>
             <span className="text-sm text-muted-foreground">
               {selectedTables.length} table(s) selected
@@ -256,12 +378,20 @@ export function DataExportTab() {
           {/* Info Box */}
           <div className="rounded-lg bg-muted/50 p-4">
             <div className="flex items-start gap-3">
-              <FileJson className="mt-0.5 h-5 w-5 text-muted-foreground" />
+              {exportFormat === 'sql' ? (
+                <FileCode className="mt-0.5 h-5 w-5 text-muted-foreground" />
+              ) : (
+                <FileJson className="mt-0.5 h-5 w-5 text-muted-foreground" />
+              )}
               <div className="space-y-1 text-sm">
-                <p className="font-medium">Export Format</p>
+                <p className="font-medium">
+                  {exportFormat === 'sql' ? 'MySQL SQL Format' : 'JSON Format'}
+                </p>
                 <p className="text-muted-foreground">
-                  Data is exported as JSON with metadata. You can convert this to MySQL INSERT
-                  statements or import directly into tools like phpMyAdmin or DBeaver.
+                  {exportFormat === 'sql' 
+                    ? 'Generates MySQL/MariaDB compatible INSERT statements. Import directly into MySQL using mysql CLI, phpMyAdmin, or DBeaver. Foreign key checks are disabled during import.'
+                    : 'Data is exported as JSON with metadata. You can convert this to MySQL INSERT statements or import directly into tools like phpMyAdmin or DBeaver.'
+                  }
                 </p>
               </div>
             </div>
