@@ -6,6 +6,9 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Raphael AI - Free unlimited image generation using FLUX.1-Dev model
+const RAPHAEL_API_URL = 'https://api.raphael.app/v1/generate';
+
 // Game currency mappings for realistic icons
 const GAME_CURRENCY_MAP: Record<string, { currency: string; icon: string; colors: string }> = {
   'mobile legends': { currency: 'Diamonds', icon: 'blue diamond gem', colors: 'blue, purple, cyan' },
@@ -101,71 +104,59 @@ serve(async (req) => {
 
     console.log(`[GeneratePackageIcon] Generating for: ${gameName} - ${packageName}`);
 
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY not configured');
-    }
-
     const prompt = generatePromptForPackage(gameName, packageName, amount || packageName);
-    console.log(`[GeneratePackageIcon] Prompt: ${prompt}`);
+    console.log(`[GeneratePackageIcon] Using Raphael AI (Free Unlimited)`);
 
-    // Call Lovable AI Gateway for image generation
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    // Call Raphael AI for free unlimited image generation
+    const response = await fetch(RAPHAEL_API_URL, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash-image-preview',
-        messages: [
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        modalities: ['image', 'text']
+        prompt: prompt,
+        width: 512,
+        height: 512,
+        num_images: 1
       })
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`[GeneratePackageIcon] API error: ${response.status} - ${errorText}`);
-      
-      if (response.status === 429) {
-        return new Response(
-          JSON.stringify({ error: 'Rate limit exceeded. Please wait and try again.' }),
-          { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-      if (response.status === 402) {
-        return new Response(
-          JSON.stringify({ error: 'AI credits exhausted. Please add credits to continue.' }),
-          { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-      throw new Error(`Lovable AI error: ${response.status}`);
+      console.error(`[GeneratePackageIcon] Raphael API error: ${response.status} - ${errorText}`);
+      throw new Error(`Raphael AI error: ${response.status}`);
     }
 
     const data = await response.json();
     
-    // Extract the image from Lovable AI response
-    const imageUrl = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+    // Extract the image URL from Raphael AI response
+    const imageUrl = data.image_url || data.images?.[0]?.url || data.output?.url;
     
     if (!imageUrl) {
       console.error('[GeneratePackageIcon] No image in response:', JSON.stringify(data));
       throw new Error('No image generated');
     }
-    
-    const imageData = imageUrl;
 
     // Upload to storage
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const base64Data = imageData.replace(/^data:image\/\w+;base64,/, '');
-    const imageBuffer = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
+    let imageBuffer: Uint8Array;
+    
+    if (imageUrl.startsWith('data:')) {
+      // Handle base64 image
+      const base64Data = imageUrl.replace(/^data:image\/\w+;base64,/, '');
+      imageBuffer = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
+    } else {
+      // Handle URL - download the image
+      const imageResponse = await fetch(imageUrl);
+      if (!imageResponse.ok) {
+        throw new Error('Failed to download generated image');
+      }
+      const arrayBuffer = await imageResponse.arrayBuffer();
+      imageBuffer = new Uint8Array(arrayBuffer);
+    }
     
     const fileName = `packages/${packageId}-${Date.now()}.png`;
     
@@ -179,7 +170,7 @@ serve(async (req) => {
     if (uploadError) {
       console.error('[GeneratePackageIcon] Upload error:', uploadError);
       return new Response(
-        JSON.stringify({ success: true, imageUrl: imageData, uploaded: false }),
+        JSON.stringify({ success: true, imageUrl: imageUrl, uploaded: false }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
