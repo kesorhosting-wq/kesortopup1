@@ -473,7 +473,7 @@ const AdminPage: React.FC = () => {
                   
                   <div className="pt-4 border-t border-border">
                     <h3 className="font-bold mb-4">Colors</h3>
-                    <div className="grid gap-4 md:grid-cols-3">
+                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                       <div>
                         <label className="text-sm font-medium mb-2 block">Primary Color</label>
                         <div className="flex gap-2">
@@ -502,6 +502,22 @@ const AdminPage: React.FC = () => {
                           <Input 
                             value={settings.accentColor}
                             onChange={(e) => handleUpdateSettings('accentColor', e.target.value)}
+                            className="flex-1 border-gold/50"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium mb-2 block">Secondary Color</label>
+                        <div className="flex gap-2">
+                          <input 
+                            type="color" 
+                            value={settings.secondaryColor || '#9b7bb8'}
+                            onChange={(e) => handleUpdateSettings('secondaryColor', e.target.value)}
+                            className="w-12 h-10 rounded cursor-pointer"
+                          />
+                          <Input 
+                            value={settings.secondaryColor || '#9b7bb8'}
+                            onChange={(e) => handleUpdateSettings('secondaryColor', e.target.value)}
                             className="flex-1 border-gold/50"
                           />
                         </div>
@@ -1230,9 +1246,29 @@ const AdminPage: React.FC = () => {
                       </div>
                     </div>
                     
-                    {/* Social Icons */}
+                    {/* Footer Text Lines */}
                     <div className="pt-4 border-t border-border">
-                      <h4 className="text-sm font-medium mb-4">Social Media Icons & Links</h4>
+                      <h4 className="text-sm font-medium mb-4">Footer Text Lines (Optional, 1-3 lines)</h4>
+                      <div className="space-y-3">
+                        {[0, 1, 2].map((index) => (
+                          <Input 
+                            key={index}
+                            value={(settings.footerTextLines || [])[index] || ''}
+                            onChange={(e) => {
+                              const newLines = [...(settings.footerTextLines || ['', '', ''])];
+                              newLines[index] = e.target.value;
+                              handleUpdateSettings('footerTextLines', newLines as any);
+                            }}
+                            className="border-gold/50"
+                            placeholder={`Line ${index + 1} (optional)`}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                    
+                    {/* Social Icons - Legacy (Telegram, TikTok, Facebook) */}
+                    <div className="pt-4 border-t border-border">
+                      <h4 className="text-sm font-medium mb-4">Social Media Icons & Links (Default)</h4>
                       <div className="grid gap-6 md:grid-cols-3">
                         <div className="space-y-2">
                           <label className="text-sm font-medium block">Telegram Icon</label>
@@ -1285,6 +1321,85 @@ const AdminPage: React.FC = () => {
                             placeholder="Facebook URL"
                           />
                         </div>
+                      </div>
+                    </div>
+
+                    {/* Additional Social Links */}
+                    <div className="pt-4 border-t border-border">
+                      <h4 className="text-sm font-medium mb-4">Additional Social Links</h4>
+                      <div className="space-y-4">
+                        {(settings.footerSocialLinks || []).map((link, index) => (
+                          <div key={link.id} className="flex flex-col sm:flex-row gap-3 items-start sm:items-end p-3 bg-muted/50 rounded-lg">
+                            <div className="w-16 shrink-0">
+                              <label className="text-xs text-muted-foreground mb-1 block">Icon</label>
+                              <ImageUpload
+                                value={link.icon}
+                                onChange={(url) => {
+                                  const newLinks = [...(settings.footerSocialLinks || [])];
+                                  newLinks[index] = { ...link, icon: url };
+                                  handleUpdateSettings('footerSocialLinks', newLinks as any);
+                                }}
+                                folder="social-icons"
+                                aspectRatio="square"
+                                placeholder="Icon"
+                                className="max-w-[60px]"
+                              />
+                            </div>
+                            <div className="flex-1 w-full sm:w-auto">
+                              <label className="text-xs text-muted-foreground mb-1 block">Name</label>
+                              <Input 
+                                value={link.name}
+                                onChange={(e) => {
+                                  const newLinks = [...(settings.footerSocialLinks || [])];
+                                  newLinks[index] = { ...link, name: e.target.value };
+                                  handleUpdateSettings('footerSocialLinks', newLinks as any);
+                                }}
+                                className="border-gold/50"
+                                placeholder="Instagram, YouTube, etc."
+                              />
+                            </div>
+                            <div className="flex-1 w-full sm:w-auto">
+                              <label className="text-xs text-muted-foreground mb-1 block">URL</label>
+                              <Input 
+                                value={link.url}
+                                onChange={(e) => {
+                                  const newLinks = [...(settings.footerSocialLinks || [])];
+                                  newLinks[index] = { ...link, url: e.target.value };
+                                  handleUpdateSettings('footerSocialLinks', newLinks as any);
+                                }}
+                                className="border-gold/50"
+                                placeholder="https://..."
+                              />
+                            </div>
+                            <Button 
+                              variant="destructive" 
+                              size="sm"
+                              onClick={() => {
+                                const newLinks = (settings.footerSocialLinks || []).filter((_, i) => i !== index);
+                                handleUpdateSettings('footerSocialLinks', newLinks as any);
+                              }}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        ))}
+                        <Button 
+                          variant="outline" 
+                          onClick={() => {
+                            const newLink = {
+                              id: `social-${Date.now()}`,
+                              icon: '',
+                              url: '',
+                              name: ''
+                            };
+                            const newLinks = [...(settings.footerSocialLinks || []), newLink];
+                            handleUpdateSettings('footerSocialLinks', newLinks as any);
+                          }}
+                          className="w-full"
+                        >
+                          <Plus className="w-4 h-4 mr-2" />
+                          Add Social Link
+                        </Button>
                       </div>
                     </div>
 

@@ -48,6 +48,13 @@ export interface IKhodePayment {
   // Note: webhook_secret removed - never expose secrets to frontend
 }
 
+export interface SocialLink {
+  id: string;
+  icon: string;
+  url: string;
+  name: string;
+}
+
 export interface SiteSettings {
   siteName: string;
   logoUrl: string;
@@ -61,6 +68,7 @@ export interface SiteSettings {
   primaryColor: string;
   accentColor: string;
   backgroundColor: string;
+  secondaryColor: string;
   // Browser settings
   siteIcon: string;
   browserTitle: string;
@@ -75,6 +83,7 @@ export interface SiteSettings {
   gameCardFrameImage: string;
   gameCardBorderImage: string;
   footerText: string;
+  footerTextLines: string[];
   footerBgColor: string;
   footerTextColor: string;
   footerTelegramIcon: string;
@@ -83,6 +92,7 @@ export interface SiteSettings {
   footerTelegramUrl: string;
   footerTiktokUrl: string;
   footerFacebookUrl: string;
+  footerSocialLinks: SocialLink[];
   footerPaymentIcons: string[];
   footerPaymentIconSize: number;
   // Topup page settings
@@ -161,6 +171,7 @@ const defaultSettings: SiteSettings = {
   primaryColor: '#D4A84B',
   accentColor: '#8B4513',
   backgroundColor: '#F5F0E6',
+  secondaryColor: '#9b7bb8',
   // Browser settings
   siteIcon: '',
   browserTitle: 'KESOR TOPUP - Game Topup Cambodia',
@@ -175,6 +186,7 @@ const defaultSettings: SiteSettings = {
   gameCardFrameImage: '',
   gameCardBorderImage: '',
   footerText: '',
+  footerTextLines: [],
   footerBgColor: '',
   footerTextColor: '',
   footerTelegramIcon: '',
@@ -183,6 +195,7 @@ const defaultSettings: SiteSettings = {
   footerTelegramUrl: '',
   footerTiktokUrl: '',
   footerFacebookUrl: '',
+  footerSocialLinks: [],
   footerPaymentIcons: [],
   footerPaymentIconSize: 32,
   // Topup page defaults
@@ -306,6 +319,7 @@ export const SiteProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           if (row.key === 'gameCardFrameImage') loadedSettings.gameCardFrameImage = row.value as string;
           if (row.key === 'gameCardBorderImage') loadedSettings.gameCardBorderImage = row.value as string;
           if (row.key === 'footerText') loadedSettings.footerText = row.value as string;
+          if (row.key === 'footerTextLines') loadedSettings.footerTextLines = row.value as string[];
           if (row.key === 'footerBgColor') loadedSettings.footerBgColor = row.value as string;
           if (row.key === 'footerTextColor') loadedSettings.footerTextColor = row.value as string;
           if (row.key === 'footerTelegramIcon') loadedSettings.footerTelegramIcon = row.value as string;
@@ -314,8 +328,10 @@ export const SiteProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           if (row.key === 'footerTelegramUrl') loadedSettings.footerTelegramUrl = row.value as string;
           if (row.key === 'footerTiktokUrl') loadedSettings.footerTiktokUrl = row.value as string;
           if (row.key === 'footerFacebookUrl') loadedSettings.footerFacebookUrl = row.value as string;
+          if (row.key === 'footerSocialLinks') loadedSettings.footerSocialLinks = row.value as unknown as SocialLink[];
           if (row.key === 'footerPaymentIcons') loadedSettings.footerPaymentIcons = row.value as string[];
           if (row.key === 'footerPaymentIconSize') loadedSettings.footerPaymentIconSize = row.value as number;
+          if (row.key === 'secondaryColor') loadedSettings.secondaryColor = row.value as string;
           if (row.key === 'topupBackgroundImage') loadedSettings.topupBackgroundImage = row.value as string;
           if (row.key === 'topupBackgroundColor') loadedSettings.topupBackgroundColor = row.value as string;
           if (row.key === 'topupBannerImage') loadedSettings.topupBannerImage = row.value as string;

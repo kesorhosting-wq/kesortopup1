@@ -94,6 +94,8 @@ const Index: React.FC = () => {
             tiktok: settings.footerTiktokUrl,
             facebook: settings.footerFacebookUrl
           }}
+          socialLinks={settings.footerSocialLinks}
+          textLines={settings.footerTextLines}
           paymentIcons={settings.footerPaymentIcons}
           paymentIconSize={settings.footerPaymentIconSize}
         />
