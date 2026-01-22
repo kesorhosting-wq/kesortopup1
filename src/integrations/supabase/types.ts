@@ -237,6 +237,7 @@ export type Database = {
           config: Json | null
           created_at: string
           enabled: boolean | null
+          icon: string | null
           id: string
           name: string
           slug: string
@@ -246,6 +247,7 @@ export type Database = {
           config?: Json | null
           created_at?: string
           enabled?: boolean | null
+          icon?: string | null
           id?: string
           name: string
           slug: string
@@ -255,6 +257,7 @@ export type Database = {
           config?: Json | null
           created_at?: string
           enabled?: boolean | null
+          icon?: string | null
           id?: string
           name?: string
           slug?: string
