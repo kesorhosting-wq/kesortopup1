@@ -97,17 +97,17 @@ const Header: React.FC = () => {
       
       <div className="container mx-auto flex items-center justify-between relative z-10">
         {/* Left section - Wallet Balance for logged in users */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 relative z-30 shrink-0">
           {user && walletBalance !== null && (
             <Link
               to="/wallet"
-              className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg bg-gradient-to-r from-emerald-500/20 to-emerald-600/20 border border-emerald-500/30 hover:border-emerald-400 transition-all group"
+              className="flex items-center gap-1 px-1.5 py-1 sm:gap-2 sm:px-3 sm:py-2 rounded-lg bg-gradient-to-r from-emerald-500/20 to-emerald-600/20 border border-emerald-500/30 hover:border-emerald-400 transition-all group"
             >
-              <Wallet className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400" />
-              <span className="text-sm sm:text-base font-bold text-emerald-400">
+              <Wallet className="w-4 h-4 text-emerald-400" />
+              <span className="text-xs sm:text-base font-bold text-emerald-400">
                 ${walletBalance.toFixed(2)}
               </span>
-              <Plus className="w-3 h-3 sm:w-4 sm:h-4 text-emerald-400/70 group-hover:text-emerald-300 transition-colors" />
+              <Plus className="w-3 h-3 text-emerald-400/70 group-hover:text-emerald-300 transition-colors hidden sm:block" />
             </Link>
           )}
           {/* Desktop ornament - hidden on mobile to make room for wallet */}
@@ -119,10 +119,10 @@ const Header: React.FC = () => {
           </div>
         </div>
 
-        {/* Logo - absolutely centered on both mobile and desktop */}
+        {/* Logo - centered but not blocking other elements */}
         <Link 
           to="/" 
-          className="flex flex-col items-center group absolute left-1/2 -translate-x-1/2 z-20"
+          className="flex flex-col items-center group absolute left-1/2 -translate-x-1/2 z-10 pointer-events-auto"
           style={{
             left: isMobile ? `${settings.logoMobilePosition}%` : '50%',
           }}
@@ -133,15 +133,14 @@ const Header: React.FC = () => {
               <img 
                 src={settings.logoUrl} 
                 alt={settings.siteName}
-                style={{ height: `${settings.logoSize || 64}px` }}
+                style={{ height: `${Math.min(settings.logoSize || 48, 48)}px` }}
                 className="object-contain transition-transform duration-300 group-hover:scale-105"
               />
             ) : (
-              <h1 className="font-display text-xl sm:text-3xl font-bold tracking-wider gold-text drop-shadow-lg transition-transform duration-300 group-hover:scale-105">
+              <h1 className="font-display text-lg font-bold tracking-wider gold-text drop-shadow-lg transition-transform duration-300 group-hover:scale-105">
                 {settings.siteName}
               </h1>
             )}
-            <div className="mt-1 w-24 sm:w-32 h-0.5 bg-gradient-to-r from-transparent via-gold to-transparent" />
           </div>
           {/* Desktop logo */}
           <div className="hidden md:flex flex-col items-center">
@@ -161,8 +160,8 @@ const Header: React.FC = () => {
           </div>
         </Link>
 
-        {/* Right ornament + Navigation */}
-        <div className="flex items-center gap-2 sm:gap-3">
+        {/* Right Navigation - higher z-index to stay above logo */}
+        <div className="flex items-center gap-1 sm:gap-3 relative z-30 shrink-0">
           <div className="hidden lg:block w-20 h-12 transform scale-x-[-1]">
             <svg viewBox="0 0 80 48" className="w-full h-full text-gold fill-current">
               <path d="M0 24c0-8 5-16 15-20s25-2 35 4c-10-2-25 2-30 8s-8 12-5 18c-10-2-15-6-15-10z" opacity="0.8"/>
@@ -176,12 +175,12 @@ const Header: React.FC = () => {
           {/* Cart Icon */}
           <Link 
             to="/cart" 
-            className="relative p-2 rounded-lg border-2 border-gold/50 bg-card hover:bg-gold/20 transition-colors"
+            className="relative p-1.5 sm:p-2 rounded-lg border-2 border-gold/50 bg-card hover:bg-gold/20 transition-colors"
             title={t('header.cart')}
           >
-            <ShoppingCart className="w-5 h-5 text-gold" />
+            <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5 text-gold" />
             {cartItemCount > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+              <span className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 bg-red-500 text-white text-[10px] sm:text-xs font-bold rounded-full flex items-center justify-center">
                 {cartItemCount > 9 ? '9+' : cartItemCount}
               </span>
             )}
@@ -191,10 +190,10 @@ const Header: React.FC = () => {
           {user && (
             <Link 
               to="/orders" 
-              className="p-2 rounded-lg border-2 border-gold/50 bg-card hover:bg-gold/20 transition-colors"
+              className="p-1.5 sm:p-2 rounded-lg border-2 border-gold/50 bg-card hover:bg-gold/20 transition-colors"
               title={t('header.orders')}
             >
-              <Receipt className="w-5 h-5 text-gold" />
+              <Receipt className="w-4 h-4 sm:w-5 sm:h-5 text-gold" />
             </Link>
           )}
 
@@ -202,10 +201,10 @@ const Header: React.FC = () => {
           {user && isAdmin && (
             <Link 
               to="/admin" 
-              className="p-2 rounded-lg border-2 border-gold/50 bg-card hover:bg-gold/20 transition-colors"
+              className="p-1.5 sm:p-2 rounded-lg border-2 border-gold/50 bg-card hover:bg-gold/20 transition-colors"
               title={t('header.admin')}
             >
-              <Settings className="w-5 h-5 text-gold" />
+              <Settings className="w-4 h-4 sm:w-5 sm:h-5 text-gold" />
             </Link>
           )}
 
@@ -213,10 +212,10 @@ const Header: React.FC = () => {
           {!user && (
             <Link 
               to="/auth" 
-              className="p-2 rounded-lg border-2 border-gold/50 bg-card hover:bg-gold/20 transition-colors"
+              className="p-1.5 sm:p-2 rounded-lg border-2 border-gold/50 bg-card hover:bg-gold/20 transition-colors"
               title={t('header.login')}
             >
-              <Settings className="w-5 h-5 text-gold" />
+              <Settings className="w-4 h-4 sm:w-5 sm:h-5 text-gold" />
             </Link>
           )}
         </div>
