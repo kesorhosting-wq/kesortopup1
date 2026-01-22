@@ -4,15 +4,18 @@ import { Settings, Receipt, ShoppingCart, Wallet, Plus } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import { useSite } from '@/contexts/SiteContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { toast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { supabase } from '@/integrations/supabase/client';
+import LanguageSwitcher from './LanguageSwitcher';
 
 const Header: React.FC = () => {
   const isMobile = useIsMobile();
   const { settings } = useSite();
   const { user, isAdmin, signOut } = useAuth();
   const { items } = useCart();
+  const { t } = useLanguage();
   const [walletBalance, setWalletBalance] = useState<number | null>(null);
 
   const cartItemCount = items.reduce((sum, item) => sum + item.quantity, 0);
@@ -166,12 +169,15 @@ const Header: React.FC = () => {
               <path d="M20 20c5-8 20-12 35-8s25 12 25 20c-5-8-20-12-35-12s-25 4-25 0z" opacity="0.6"/>
             </svg>
           </div>
+
+          {/* Language Switcher */}
+          <LanguageSwitcher />
           
           {/* Cart Icon */}
           <Link 
             to="/cart" 
             className="relative p-2 rounded-lg border-2 border-gold/50 bg-card hover:bg-gold/20 transition-colors"
-            title="កន្ត្រក"
+            title={t('header.cart')}
           >
             <ShoppingCart className="w-5 h-5 text-gold" />
             {cartItemCount > 0 && (
@@ -186,7 +192,7 @@ const Header: React.FC = () => {
             <Link 
               to="/orders" 
               className="p-2 rounded-lg border-2 border-gold/50 bg-card hover:bg-gold/20 transition-colors"
-              title="ប្រវត្តិការបញ្ជាទិញ"
+              title={t('header.orders')}
             >
               <Receipt className="w-5 h-5 text-gold" />
             </Link>
@@ -197,7 +203,7 @@ const Header: React.FC = () => {
             <Link 
               to="/admin" 
               className="p-2 rounded-lg border-2 border-gold/50 bg-card hover:bg-gold/20 transition-colors"
-              title="Admin Panel"
+              title={t('header.admin')}
             >
               <Settings className="w-5 h-5 text-gold" />
             </Link>
@@ -208,7 +214,7 @@ const Header: React.FC = () => {
             <Link 
               to="/auth" 
               className="p-2 rounded-lg border-2 border-gold/50 bg-card hover:bg-gold/20 transition-colors"
-              title="ចូលគណនី"
+              title={t('header.login')}
             >
               <Settings className="w-5 h-5 text-gold" />
             </Link>
