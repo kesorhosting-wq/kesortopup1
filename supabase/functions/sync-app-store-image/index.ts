@@ -6,6 +6,34 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Common region identifiers to strip from game names
+const REGION_PATTERNS = [
+  // Countries/Regions at end with various separators
+  /\s*[-–—]\s*(SG|Singapore|Cambodia|KH|VN|Vietnam|MY|Malaysia|TH|Thailand|ID|Indonesia|PH|Philippines|TW|Taiwan|JP|Japan|KR|Korea|CN|China|HK|Hong Kong|IN|India|BR|Brazil|LA|Laos|MM|Myanmar|BD|Bangladesh|PK|Pakistan|NP|Nepal|LK|Sri Lanka|Global|SEA|MENA|EU|NA|LATAM)\s*$/i,
+  // Countries in parentheses
+  /\s*\((SG|Singapore|Cambodia|KH|VN|Vietnam|MY|Malaysia|TH|Thailand|ID|Indonesia|PH|Philippines|TW|Taiwan|JP|Japan|KR|Korea|CN|China|HK|Hong Kong|IN|India|BR|Brazil|LA|Laos|MM|Myanmar|BD|Bangladesh|PK|Pakistan|NP|Nepal|LK|Sri Lanka|Global|SEA|MENA|EU|NA|LATAM)\)\s*$/i,
+  // Countries with colon separator
+  /\s*:\s*(SG|Singapore|Cambodia|KH|VN|Vietnam|MY|Malaysia|TH|Thailand|ID|Indonesia|PH|Philippines|TW|Taiwan|JP|Japan|KR|Korea|CN|China|HK|Hong Kong|IN|India|BR|Brazil)\s*$/i,
+  // Just space + 2-letter codes at end
+  /\s+(SG|KH|VN|MY|TH|ID|PH|TW|JP|KR|CN|HK|IN|BR|LA|MM|BD|PK|NP|LK)\s*$/i,
+];
+
+// Normalize game name by stripping region identifiers
+function normalizeGameName(gameName: string): string {
+  let normalized = gameName.trim();
+  
+  // Apply each pattern to strip regional identifiers
+  for (const pattern of REGION_PATTERNS) {
+    normalized = normalized.replace(pattern, '');
+  }
+  
+  // Clean up any trailing whitespace or separators
+  normalized = normalized.replace(/\s*[-–—:]\s*$/, '').trim();
+  
+  console.log(`Normalized "${gameName}" -> "${normalized}"`);
+  return normalized;
+}
+
 // Search iTunes App Store for app icon
 async function searchAppStore(gameName: string): Promise<string | null> {
   try {
@@ -90,19 +118,21 @@ serve(async (req) => {
       );
     }
 
-    console.log(`Searching app stores for: ${gameName} (source: ${source})`);
+    // Normalize the game name to strip regional identifiers
+    const searchName = normalizeGameName(gameName);
+    console.log(`Searching app stores for: "${gameName}" -> normalized: "${searchName}" (source: ${source})`);
 
     let iconUrl: string | null = null;
     let foundSource = '';
 
-    // Search based on preference
+    // Search based on preference using normalized name
     if (source === 'appstore' || source === 'both') {
-      iconUrl = await searchAppStore(gameName);
+      iconUrl = await searchAppStore(searchName);
       if (iconUrl) foundSource = 'App Store';
     }
 
     if (!iconUrl && (source === 'playstore' || source === 'both')) {
-      iconUrl = await searchPlayStore(gameName);
+      iconUrl = await searchPlayStore(searchName);
       if (iconUrl) foundSource = 'Play Store';
     }
 
