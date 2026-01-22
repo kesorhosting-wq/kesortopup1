@@ -22,8 +22,8 @@ const FeaturedGamesSection: React.FC<FeaturedGamesSectionProps> = ({ games }) =>
         icon={Crown}
       />
       
-      {/* Featured games grid - responsive layout */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 max-w-6xl mx-auto">
+      {/* Featured games grid - 2 cols mobile, 3 cols tablet, 4 cols desktop */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 max-w-6xl mx-auto">
         {featuredGames.map((game, index) => (
           <FeaturedGameCard 
             key={game.id} 

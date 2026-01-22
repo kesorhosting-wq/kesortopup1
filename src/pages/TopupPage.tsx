@@ -1158,19 +1158,19 @@ const TopupPage: React.FC = () => {
           </div>
           
           {/* Step 1: Enter ID - Modern Card Style */}
-          <div className="mb-8 p-6 rounded-2xl bg-gradient-to-br from-card via-card to-card/80 border border-border/50 relative overflow-hidden">
+          <div className="mb-6 sm:mb-8 p-4 sm:p-6 rounded-xl sm:rounded-2xl bg-gradient-to-br from-card via-card to-card/80 border border-border/50 relative overflow-hidden">
             {/* Decorative Elements */}
-            <div className="absolute top-0 right-0 w-32 h-32 bg-gold/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-            <div className="absolute bottom-0 left-0 w-24 h-24 bg-emerald-500/5 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2" />
+            <div className="absolute top-0 right-0 w-24 sm:w-32 h-24 sm:h-32 bg-gold/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+            <div className="absolute bottom-0 left-0 w-20 sm:w-24 h-20 sm:h-24 bg-emerald-500/5 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2" />
             
             {/* Header */}
-            <div className="flex items-center gap-3 mb-6 relative">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-gold to-gold-dark flex items-center justify-center text-primary-foreground font-bold shadow-lg">
+            <div className="flex items-center gap-2.5 sm:gap-3 mb-4 sm:mb-6 relative">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-gradient-to-br from-gold to-gold-dark flex items-center justify-center text-primary-foreground font-bold shadow-lg text-sm sm:text-base">
                 1
               </div>
               <div>
-                <h2 className="font-bold text-lg">Enter Your ID</h2>
-                <p className="text-xs text-muted-foreground">សុំបញ្ចូល ID របស់អ្នក</p>
+                <h2 className="font-bold text-base sm:text-lg">Enter Your ID</h2>
+                <p className="text-[10px] sm:text-xs text-muted-foreground">សុំបញ្ចូល ID របស់អ្នក</p>
               </div>
             </div>
             
@@ -1244,18 +1244,18 @@ const TopupPage: React.FC = () => {
 
           {/* Special Offers Section */}
           {game.specialPackages && game.specialPackages.length > 0 && (
-            <div className="mb-8">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-red-500 to-orange-500">
-                  <Sparkles className="w-4 h-4 text-white" />
-                  <span className="text-white font-bold text-sm">Special Offers</span>
+            <div className="mb-6 sm:mb-8">
+              <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                <div className="flex items-center gap-1.5 sm:gap-2 px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl bg-gradient-to-r from-red-500 to-orange-500">
+                  <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
+                  <span className="text-white font-bold text-xs sm:text-sm">Special Offers</span>
                 </div>
-                <span className="text-xs text-muted-foreground">
+                <span className="text-[10px] sm:text-xs text-muted-foreground">
                   {game.specialPackages.length} packages
                 </span>
               </div>
               
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-3">
                 {[...game.specialPackages].sort((a, b) => a.price - b.price).map((pkg) => (
                   <ModernPackageCard
                     key={pkg.id}
@@ -1270,18 +1270,18 @@ const TopupPage: React.FC = () => {
           )}
           
           {/* Step 2: Select Package - Modern Grid */}
-          <div className="mb-8">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-gold to-gold-dark flex items-center justify-center text-primary-foreground font-bold shadow-lg">
+          <div className="mb-6 sm:mb-8">
+            <div className="flex items-center gap-2.5 sm:gap-3 mb-3 sm:mb-4">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-gradient-to-br from-gold to-gold-dark flex items-center justify-center text-primary-foreground font-bold shadow-lg text-sm sm:text-base">
                 2
               </div>
               <div>
-                <h2 className="font-bold text-lg">Select Package</h2>
-                <p className="text-xs text-muted-foreground">{game.packages.length} packages available</p>
+                <h2 className="font-bold text-base sm:text-lg">Select Package</h2>
+                <p className="text-[10px] sm:text-xs text-muted-foreground">{game.packages.length} packages available</p>
               </div>
             </div>
             
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-3">
               {[...game.packages].sort((a, b) => a.price - b.price).map((pkg) => (
                 <ModernPackageCard
                   key={pkg.id}
@@ -1294,43 +1294,43 @@ const TopupPage: React.FC = () => {
           </div>
           
           {/* Step 3: Payment Method - Modern Card */}
-          <div className="mb-8 p-6 rounded-2xl bg-gradient-to-br from-card via-card to-card/80 border border-border/50">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-gold to-gold-dark flex items-center justify-center text-primary-foreground font-bold shadow-lg">
+          <div className="mb-6 sm:mb-8 p-4 sm:p-6 rounded-xl sm:rounded-2xl bg-gradient-to-br from-card via-card to-card/80 border border-border/50">
+            <div className="flex items-center gap-2.5 sm:gap-3 mb-4 sm:mb-6">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-gradient-to-br from-gold to-gold-dark flex items-center justify-center text-primary-foreground font-bold shadow-lg text-sm sm:text-base">
                 3
               </div>
               <div>
-                <h2 className="font-bold text-lg">Payment Method</h2>
-                <p className="text-xs text-muted-foreground">ជ្រើសរើសធនាគារបង់ប្រាក់</p>
+                <h2 className="font-bold text-base sm:text-lg">Payment Method</h2>
+                <p className="text-[10px] sm:text-xs text-muted-foreground">ជ្រើសរើសធនាគារបង់ប្រាក់</p>
               </div>
             </div>
             
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-3 gap-2 sm:gap-3">
               {/* Wallet Payment Option with Balance */}
               <button
                 onClick={() => setSelectedPayment('wallet')}
                 className={cn(
-                  "p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 relative",
+                  "p-2.5 sm:p-4 rounded-lg sm:rounded-xl border-2 transition-all flex flex-col items-center gap-1.5 sm:gap-2 relative",
                   "hover:scale-[1.02] active:scale-[0.98]",
                   selectedPayment === 'wallet'
                     ? "border-emerald-500 bg-emerald-500/10 shadow-lg shadow-emerald-500/10"
                     : "border-border/50 bg-card hover:border-emerald-500/50"
                 )}
               >
-                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center">
-                  <Wallet className="w-5 h-5 text-white" />
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-md sm:rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center">
+                  <Wallet className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                 </div>
-                <span className="text-xs font-medium">Wallet</span>
+                <span className="text-[10px] sm:text-xs font-medium">Wallet</span>
                 {user && (
                   <span className={cn(
-                    "text-[10px] font-bold",
+                    "text-[9px] sm:text-[10px] font-bold",
                     walletBalance > 0 ? "text-emerald-400" : "text-muted-foreground"
                   )}>
                     ${walletBalance.toFixed(2)}
                   </span>
                 )}
                 {selectedPayment === 'wallet' && (
-                  <CheckCircle className="w-4 h-4 text-emerald-500" />
+                  <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 text-emerald-500" />
                 )}
               </button>
               
@@ -1339,7 +1339,7 @@ const TopupPage: React.FC = () => {
                   key={method.id}
                   onClick={() => setSelectedPayment(method.id)}
                   className={cn(
-                    "p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2",
+                    "p-2.5 sm:p-4 rounded-lg sm:rounded-xl border-2 transition-all flex flex-col items-center gap-1.5 sm:gap-2",
                     "hover:scale-[1.02] active:scale-[0.98]",
                     selectedPayment === method.id
                       ? "border-gold bg-gold/10 shadow-lg shadow-gold/10"
@@ -1350,14 +1350,14 @@ const TopupPage: React.FC = () => {
                     <img 
                       src={method.icon} 
                       alt={method.name}
-                      className="w-10 h-10 rounded-lg object-cover"
+                      className="w-8 h-8 sm:w-10 sm:h-10 rounded-md sm:rounded-lg object-cover"
                     />
                   ) : (
-                    <span className="text-2xl">{method.icon}</span>
+                    <span className="text-xl sm:text-2xl">{method.icon}</span>
                   )}
-                  <span className="text-xs font-medium">{method.name}</span>
+                  <span className="text-[10px] sm:text-xs font-medium line-clamp-1">{method.name}</span>
                   {selectedPayment === method.id && (
-                    <CheckCircle className="w-4 h-4 text-gold" />
+                    <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 text-gold" />
                   )}
                 </button>
               ))}
@@ -1365,46 +1365,46 @@ const TopupPage: React.FC = () => {
           </div>
           
           {/* Step 4: Confirm & Pay */}
-          <div className="p-6 rounded-2xl bg-gradient-to-br from-card via-card to-card/80 border border-border/50">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-gold to-gold-dark flex items-center justify-center text-primary-foreground font-bold shadow-lg">
+          <div className="p-4 sm:p-6 rounded-xl sm:rounded-2xl bg-gradient-to-br from-card via-card to-card/80 border border-border/50">
+            <div className="flex items-center gap-2.5 sm:gap-3 mb-4 sm:mb-6">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-gradient-to-br from-gold to-gold-dark flex items-center justify-center text-primary-foreground font-bold shadow-lg text-sm sm:text-base">
                 4
               </div>
               <div>
-                <h2 className="font-bold text-lg">Confirm & Pay</h2>
-                <p className="text-xs text-muted-foreground">យកព្រមទទួលលក្ខខណ្ឌ</p>
+                <h2 className="font-bold text-base sm:text-lg">Confirm & Pay</h2>
+                <p className="text-[10px] sm:text-xs text-muted-foreground">យកព្រមទទួលលក្ខខណ្ឌ</p>
               </div>
             </div>
             
-            <label className="flex items-center gap-3 mb-6 cursor-pointer group">
+            <label className="flex items-center gap-2.5 sm:gap-3 mb-4 sm:mb-6 cursor-pointer group">
               <button
                 onClick={() => setAgreedToTerms(!agreedToTerms)}
                 className={cn(
-                  "w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all",
+                  "w-5 h-5 sm:w-6 sm:h-6 rounded-md sm:rounded-lg border-2 flex items-center justify-center transition-all flex-shrink-0",
                   agreedToTerms 
                     ? "bg-gold border-gold" 
                     : "border-border group-hover:border-gold/50"
                 )}
               >
-                {agreedToTerms && <CheckCircle className="w-4 h-4 text-primary-foreground" />}
+                {agreedToTerms && <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 text-primary-foreground" />}
               </button>
-              <span className="text-sm">
+              <span className="text-xs sm:text-sm">
                 I agree to the <span className="text-gold cursor-pointer hover:underline">Terms and Conditions</span>
               </span>
             </label>
             
             {/* Order Summary */}
             {selectedPackage && (
-              <div className="mb-6 p-4 rounded-xl bg-secondary/30 border border-border/50">
+              <div className="mb-4 sm:mb-6 p-3 sm:p-4 rounded-lg sm:rounded-xl bg-secondary/30 border border-border/50">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Selected Package:</span>
-                  <span className="font-bold">
+                  <span className="text-xs sm:text-sm text-muted-foreground">Selected Package:</span>
+                  <span className="font-bold text-sm sm:text-base">
                     {(game.packages.find(p => p.id === selectedPackage) || game.specialPackages.find(p => p.id === selectedPackage))?.name}
                   </span>
                 </div>
-                <div className="flex justify-between items-center mt-2">
-                  <span className="text-sm text-muted-foreground">Total:</span>
-                  <span className="text-2xl font-bold gold-text">
+                <div className="flex justify-between items-center mt-1.5 sm:mt-2">
+                  <span className="text-xs sm:text-sm text-muted-foreground">Total:</span>
+                  <span className="text-xl sm:text-2xl font-bold gold-text">
                     {settings.packageCurrencySymbol || '$'}
                     {((game.packages.find(p => p.id === selectedPackage) || game.specialPackages.find(p => p.id === selectedPackage))?.price || 0).toFixed(2)}
                   </span>
@@ -1415,16 +1415,16 @@ const TopupPage: React.FC = () => {
             <Button 
               onClick={handleSubmit}
               disabled={isSubmitting || !agreedToTerms || !selectedPackage || !selectedPayment || !verifiedUser}
-              className="w-full py-6 text-lg font-bold bg-gradient-to-r from-gold to-gold-dark hover:from-gold-dark hover:to-gold text-primary-foreground shadow-lg shadow-gold/20 disabled:opacity-50 disabled:shadow-none rounded-xl"
+              className="w-full py-4 sm:py-6 text-base sm:text-lg font-bold bg-gradient-to-r from-gold to-gold-dark hover:from-gold-dark hover:to-gold text-primary-foreground shadow-lg shadow-gold/20 disabled:opacity-50 disabled:shadow-none rounded-lg sm:rounded-xl"
             >
               {isSubmitting ? (
                 <span className="flex items-center gap-2">
-                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
                   Processing...
                 </span>
               ) : (
                 <span className="flex items-center gap-2">
-                  <Zap className="w-5 h-5" />
+                  <Zap className="w-4 h-4 sm:w-5 sm:h-5" />
                   Pay Now
                 </span>
               )}
