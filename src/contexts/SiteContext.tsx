@@ -222,18 +222,12 @@ const defaultSettings: SiteSettings = {
   paymentSectionTextColor: '',
 };
 
-const defaultPaymentMethods: PaymentMethod[] = [
-  { id: '1', name: 'ABA Bank', icon: '🏦' },
-  { id: '2', name: 'Wing Bank', icon: '🦅' },
-  { id: '3', name: 'KHQR', icon: '📱' },
-];
-
 const SiteContext = createContext<SiteContextType | undefined>(undefined);
 
 export const SiteProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [settings, setSettings] = useState<SiteSettings>(defaultSettings);
   const [games, setGames] = useState<Game[]>([]);
-  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>(defaultPaymentMethods);
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [ikhodePayment, setIkhodePayment] = useState<IKhodePayment | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -252,8 +246,8 @@ export const SiteProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         supabase.from('special_packages').select('*').order('sort_order', { ascending: true }),
         // Use public view to avoid exposing sensitive config data (webhook_secret, api keys)
         supabase.from('payment_gateways_public').select('*').eq('slug', 'ikhode-bakong').maybeSingle(),
-        // Load all payment gateways
-        supabase.from('payment_gateways').select('id, name, slug, enabled').order('created_at', { ascending: true }),
+        // Load all payment gateways (only enabled ones)
+        supabase.from('payment_gateways').select('id, name, slug, enabled, icon').eq('enabled', true).order('created_at', { ascending: true }),
       ]);
       
       const settingsData = settingsResult.data;
@@ -263,12 +257,12 @@ export const SiteProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const ikhodeGateway = ikhodeGatewayResult.data;
       const paymentGatewaysData = paymentMethodsResult.data;
 
-      // Load payment methods from database
-      if (paymentGatewaysData && paymentGatewaysData.length > 0) {
+      // Load payment methods from database (only enabled ones with icon from DB)
+      if (paymentGatewaysData) {
         const loadedPaymentMethods: PaymentMethod[] = paymentGatewaysData.map(pg => ({
           id: pg.id,
           name: pg.name,
-          icon: pg.slug === 'ikhode-bakong' ? '📱' : '💳',
+          icon: (pg as any).icon || '💳',
         }));
         setPaymentMethods(loadedPaymentMethods);
       }
@@ -581,15 +575,16 @@ export const SiteProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       const { data, error } = await supabase
         .from('payment_gateways')
-        .select('id, name, slug, enabled')
+        .select('id, name, slug, enabled, icon')
+        .eq('enabled', true)
         .order('created_at', { ascending: true });
       
       if (error) throw error;
-      if (data && data.length > 0) {
+      if (data) {
         const loadedPaymentMethods: PaymentMethod[] = data.map(pg => ({
           id: pg.id,
           name: pg.name,
-          icon: pg.slug === 'ikhode-bakong' ? '📱' : '💳',
+          icon: (pg as any).icon || '💳',
         }));
         setPaymentMethods(loadedPaymentMethods);
       }
@@ -608,7 +603,8 @@ export const SiteProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           name: method.name,
           slug: slug,
           enabled: true,
-          config: {}
+          config: {},
+          icon: method.icon || '💳'
         })
         .select()
         .single();
@@ -618,7 +614,7 @@ export const SiteProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setPaymentMethods(prev => [...prev, {
           id: data.id,
           name: data.name,
-          icon: method.icon || '💳',
+          icon: (data as any).icon || '💳',
         }]);
       }
     } catch (error) {
@@ -630,10 +626,13 @@ export const SiteProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   // Update existing payment method (preserves slug to prevent breaking integrations)
   const updatePaymentMethod = async (id: string, method: Partial<PaymentMethod>) => {
     try {
-      // Only update name, never change slug to prevent breaking integrations
-      const updateData: { name?: string } = {};
+      // Update name and icon, never change slug to prevent breaking integrations
+      const updateData: { name?: string; icon?: string } = {};
       if (method.name) {
         updateData.name = method.name;
+      }
+      if (method.icon !== undefined) {
+        updateData.icon = method.icon;
       }
       
       const { error } = await supabase
@@ -947,7 +946,7 @@ export const useSite = () => {
     return {
       settings: defaultSettings,
       games: [],
-      paymentMethods: defaultPaymentMethods,
+      paymentMethods: [],
       ikhodePayment: null,
       isLoading: false,
       refreshGames: async () => {},
