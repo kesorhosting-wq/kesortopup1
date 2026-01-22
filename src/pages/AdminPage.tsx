@@ -27,7 +27,7 @@ import G2BulkDebugLogs from '@/components/admin/G2BulkDebugLogs';
 import PackageStockBadge from '@/components/admin/PackageStockBadge';
 import AIGameImageGenerator, { AIBulkImageGenerator } from '@/components/admin/AIGameImageGenerator';
 import { AIBulkPackageIconGenerator } from '@/components/admin/AIPackageIconGenerator';
-import { KiraIconScraper } from '@/components/admin/KiraIconScraper';
+import { PackageIconSearcher } from '@/components/admin/PackageIconSearcher';
 import GameImageSearch from '@/components/admin/GameImageSearch';
 import AppStoreImageSync, { AppStoreBulkSync } from '@/components/admin/AppStoreImageSync';
 import { useG2BulkProductStatus } from '@/hooks/useG2BulkProductStatus';
@@ -1447,7 +1447,7 @@ const AdminPage: React.FC = () => {
                   games={games}
                   onComplete={refreshGames}
                 />
-                <KiraIconScraper
+                <PackageIconSearcher
                   games={games}
                   onComplete={refreshGames}
                 />
