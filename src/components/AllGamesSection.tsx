@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Game } from '@/contexts/SiteContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import ModernGameCard from './ModernGameCard';
 import SectionHeader from './SectionHeader';
 import { Gamepad2, Search, X } from 'lucide-react';
@@ -11,6 +12,7 @@ interface AllGamesSectionProps {
 
 const AllGamesSection: React.FC<AllGamesSectionProps> = ({ games }) => {
   const [searchQuery, setSearchQuery] = useState('');
+  const { t } = useLanguage();
 
   // Filter and sort games
   const filteredAndSortedGames = useMemo(() => {
@@ -27,8 +29,8 @@ const AllGamesSection: React.FC<AllGamesSectionProps> = ({ games }) => {
   return (
     <section className="container mx-auto px-3 sm:px-4 py-6 sm:py-10">
       <SectionHeader 
-        title="All Games"
-        subtitle="Browse our complete collection"
+        title={t('home.allGames')}
+        subtitle={t('home.allGamesSubtitle')}
         icon={Gamepad2}
       />
 
@@ -38,7 +40,7 @@ const AllGamesSection: React.FC<AllGamesSectionProps> = ({ games }) => {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             type="text"
-            placeholder="Search games..."
+            placeholder={t('home.searchGames')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10 pr-10 bg-background/80 backdrop-blur-sm border-border/50"
@@ -54,7 +56,7 @@ const AllGamesSection: React.FC<AllGamesSectionProps> = ({ games }) => {
         </div>
         {searchQuery && (
           <p className="text-sm text-muted-foreground text-center mt-2">
-            Found {filteredAndSortedGames.length} game{filteredAndSortedGames.length !== 1 ? 's' : ''}
+            {t('home.foundGames').replace('{count}', String(filteredAndSortedGames.length))}
           </p>
         )}
       </div>
@@ -72,7 +74,7 @@ const AllGamesSection: React.FC<AllGamesSectionProps> = ({ games }) => {
       ) : (
         <div className="text-center py-12">
           <Gamepad2 className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
-          <p className="text-muted-foreground">No games found matching "{searchQuery}"</p>
+          <p className="text-muted-foreground">{t('home.noGamesFound')} "{searchQuery}"</p>
         </div>
       )}
     </section>

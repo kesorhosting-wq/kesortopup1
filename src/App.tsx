@@ -7,6 +7,7 @@ import { HelmetProvider } from "react-helmet-async";
 import { SiteProvider } from "@/contexts/SiteContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { CartProvider } from "@/contexts/CartContext";
+import { LanguageProvider } from "@/contexts/LanguageContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Index from "./pages/Index";
 import TopupPage from "./pages/TopupPage";
@@ -27,34 +28,36 @@ const App = () => (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <AuthProvider>
-          <SiteProvider>
-            <CartProvider>
-              <TooltipProvider>
-                <Toaster />
-                <Sonner />
-                <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/topup/:gameId" element={<TopupPage />} />
-                <Route path="/cart" element={<CartPage />} />
-                <Route path="/checkout" element={<CheckoutPage />} />
-                <Route path="/invoice/:orderId" element={<InvoicePage />} />
-                <Route path="/orders" element={<OrderHistoryPage />} />
-                <Route path="/wallet" element={<WalletPage />} />
-                <Route path="/profile" element={<UserProfilePage />} />
-                <Route path="/auth" element={<AuthPage />} />
-                  <Route 
-                    path="/admin" 
-                    element={
-                      <ProtectedRoute requireAdmin>
-                        <AdminPage />
-                      </ProtectedRoute>
-                    } 
-                  />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </TooltipProvider>
-            </CartProvider>
-          </SiteProvider>
+          <LanguageProvider>
+            <SiteProvider>
+              <CartProvider>
+                <TooltipProvider>
+                  <Toaster />
+                  <Sonner />
+                  <Routes>
+                    <Route path="/" element={<Index />} />
+                    <Route path="/topup/:gameId" element={<TopupPage />} />
+                    <Route path="/cart" element={<CartPage />} />
+                    <Route path="/checkout" element={<CheckoutPage />} />
+                    <Route path="/invoice/:orderId" element={<InvoicePage />} />
+                    <Route path="/orders" element={<OrderHistoryPage />} />
+                    <Route path="/wallet" element={<WalletPage />} />
+                    <Route path="/profile" element={<UserProfilePage />} />
+                    <Route path="/auth" element={<AuthPage />} />
+                    <Route 
+                      path="/admin" 
+                      element={
+                        <ProtectedRoute requireAdmin>
+                          <AdminPage />
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </TooltipProvider>
+              </CartProvider>
+            </SiteProvider>
+          </LanguageProvider>
         </AuthProvider>
       </BrowserRouter>
     </QueryClientProvider>

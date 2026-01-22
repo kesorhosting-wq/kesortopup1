@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useSite } from '@/contexts/SiteContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface FooterProps {
   backgroundColor?: string;
@@ -22,6 +23,7 @@ const Footer: React.FC<FooterProps> = ({
   paymentIconSize = 32
 }) => {
   const { settings, games } = useSite();
+  const { t } = useLanguage();
   
   return (
     <footer className="mt-auto">
