@@ -2430,27 +2430,29 @@ const AdminPage: React.FC = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="flex gap-4 items-end flex-wrap">
-                    <div className="w-24">
-                      <label className="text-sm font-medium mb-2 block">Icon/Image</label>
-                      <ImageUpload
-                        value={newPayment.icon || ''}
-                        onChange={(url) => setNewPayment(prev => ({ ...prev, icon: url }))}
-                        folder="payments"
-                        aspectRatio="square"
-                        placeholder="Icon"
-                      />
+                  <div className="space-y-4">
+                    <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-end">
+                      <div className="w-20 sm:w-24 shrink-0">
+                        <label className="text-sm font-medium mb-2 block">Icon/Image</label>
+                        <ImageUpload
+                          value={newPayment.icon || ''}
+                          onChange={(url) => setNewPayment(prev => ({ ...prev, icon: url }))}
+                          folder="payments"
+                          aspectRatio="square"
+                          placeholder="Icon"
+                        />
+                      </div>
+                      <div className="flex-1 w-full">
+                        <label className="text-sm font-medium mb-2 block">Payment Name</label>
+                        <Input 
+                          placeholder="e.g. ABA Bank"
+                          value={newPayment.name}
+                          onChange={(e) => setNewPayment(prev => ({ ...prev, name: e.target.value }))}
+                          className="border-gold/50"
+                        />
+                      </div>
                     </div>
-                    <div className="flex-1 min-w-[200px]">
-                      <label className="text-sm font-medium mb-2 block">Payment Name</label>
-                      <Input 
-                        placeholder="e.g. ABA Bank"
-                        value={newPayment.name}
-                        onChange={(e) => setNewPayment(prev => ({ ...prev, name: e.target.value }))}
-                        className="border-gold/50"
-                      />
-                    </div>
-                    <Button onClick={handleAddPayment} className="bg-gold hover:bg-gold-dark text-primary-foreground">
+                    <Button onClick={handleAddPayment} className="w-full sm:w-auto bg-gold hover:bg-gold-dark text-primary-foreground">
                       <Plus className="w-4 h-4 mr-2" />
                       Add Payment
                     </Button>
