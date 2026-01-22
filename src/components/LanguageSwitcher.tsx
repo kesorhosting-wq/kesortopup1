@@ -9,7 +9,7 @@ import {
 import { useLanguage, Language } from '@/contexts/LanguageContext';
 
 const languages: { code: Language; name: string; flag: string }[] = [
-  { code: 'km', name: 'ភាសាខ្មែរ', flag: '🇰🇭' },
+  { code: 'km', name: 'ខ្មែរ', flag: '🇰🇭' },
   { code: 'en', name: 'English', flag: '🇺🇸' },
 ];
 
