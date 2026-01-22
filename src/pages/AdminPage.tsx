@@ -28,6 +28,7 @@ import PackageStockBadge from '@/components/admin/PackageStockBadge';
 import AIGameImageGenerator, { AIBulkImageGenerator } from '@/components/admin/AIGameImageGenerator';
 import { AIBulkPackageIconGenerator } from '@/components/admin/AIPackageIconGenerator';
 import GameImageSearch from '@/components/admin/GameImageSearch';
+import AppStoreImageSync, { AppStoreBulkSync } from '@/components/admin/AppStoreImageSync';
 import { useG2BulkProductStatus } from '@/hooks/useG2BulkProductStatus';
 import { AdminWalletTab } from '@/components/admin/AdminWalletTab';
 
@@ -1431,9 +1432,13 @@ const AdminPage: React.FC = () => {
                 />
               </div>
 
-              {/* AI Image Generator */}
-              <div className="mb-6">
+              {/* Image Tools */}
+              <div className="mb-6 space-y-3">
                 <AIBulkImageGenerator 
+                  games={games} 
+                  onComplete={refreshGames} 
+                />
+                <AppStoreBulkSync 
                   games={games} 
                   onComplete={refreshGames} 
                 />
@@ -1673,9 +1678,13 @@ const AdminPage: React.FC = () => {
                                 gameName={game.name}
                                 gameId={game.id}
                                 currentImage={game.image}
-                                onImageGenerated={(url) => {
-                                  refreshGames();
-                                }}
+                                onImageGenerated={() => refreshGames()}
+                                variant="icon"
+                              />
+                              <AppStoreImageSync
+                                gameName={game.name}
+                                gameId={game.id}
+                                onImageSynced={() => refreshGames()}
                                 variant="icon"
                               />
                               <Button 
