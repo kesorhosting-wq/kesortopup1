@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { useSite } from '@/contexts/SiteContext';
+import { useSite, SocialLink } from '@/contexts/SiteContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 interface FooterProps {
@@ -9,6 +9,8 @@ interface FooterProps {
   copyrightText?: string;
   socialIcons?: { telegram?: string; tiktok?: string; facebook?: string };
   socialUrls?: { telegram?: string; tiktok?: string; facebook?: string };
+  socialLinks?: SocialLink[];
+  textLines?: string[];
   paymentIcons?: string[];
   paymentIconSize?: number;
 }
@@ -19,11 +21,21 @@ const Footer: React.FC<FooterProps> = ({
   copyrightText,
   socialIcons,
   socialUrls,
+  socialLinks = [],
+  textLines = [],
   paymentIcons,
   paymentIconSize = 32
 }) => {
   const { settings, games } = useSite();
   const { t } = useLanguage();
+
+  // Combine legacy social icons with new dynamic social links
+  const allSocialLinks: SocialLink[] = [
+    ...(socialIcons?.telegram ? [{ id: 'telegram', icon: socialIcons.telegram, url: socialUrls?.telegram || '#', name: 'Telegram' }] : []),
+    ...(socialIcons?.tiktok ? [{ id: 'tiktok', icon: socialIcons.tiktok, url: socialUrls?.tiktok || '#', name: 'TikTok' }] : []),
+    ...(socialIcons?.facebook ? [{ id: 'facebook', icon: socialIcons.facebook, url: socialUrls?.facebook || '#', name: 'Facebook' }] : []),
+    ...socialLinks
+  ];
   
   return (
     <footer className="mt-auto">
@@ -96,38 +108,33 @@ const Footer: React.FC<FooterProps> = ({
               <h4 className="font-bold uppercase tracking-wide text-xs sm:text-sm" style={{ color: textColor }}>
                 Follow Us
               </h4>
-              <div className="flex gap-2 sm:gap-3">
-                {socialIcons?.telegram && (
+              
+              {/* Optional text lines */}
+              {textLines && textLines.length > 0 && (
+                <div className="space-y-1">
+                  {textLines.filter(line => line.trim()).map((line, index) => (
+                    <p key={index} className="text-xs sm:text-sm opacity-80" style={{ color: textColor }}>
+                      {line}
+                    </p>
+                  ))}
+                </div>
+              )}
+              
+              {/* Social icons */}
+              <div className="flex gap-2 sm:gap-3 flex-wrap">
+                {allSocialLinks.map((social) => (
                   <a 
-                    href={socialUrls?.telegram || '#'} 
+                    key={social.id}
+                    href={social.url || '#'} 
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="w-8 h-8 sm:w-10 sm:h-10 rounded-full overflow-hidden flex items-center justify-center bg-white/10 hover:bg-white/20 transition-colors"
+                    title={social.name}
                   >
-                    <img src={socialIcons.telegram} alt="Telegram" className="w-full h-full object-cover" />
+                    <img src={social.icon} alt={social.name} className="w-full h-full object-cover" />
                   </a>
-                )}
-                {socialIcons?.tiktok && (
-                  <a 
-                    href={socialUrls?.tiktok || '#'} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="w-8 h-8 sm:w-10 sm:h-10 rounded-full overflow-hidden flex items-center justify-center bg-white/10 hover:bg-white/20 transition-colors"
-                  >
-                    <img src={socialIcons.tiktok} alt="TikTok" className="w-full h-full object-cover" />
-                  </a>
-                )}
-                {socialIcons?.facebook && (
-                  <a 
-                    href={socialUrls?.facebook || '#'} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="w-8 h-8 sm:w-10 sm:h-10 rounded-full overflow-hidden flex items-center justify-center bg-white/10 hover:bg-white/20 transition-colors"
-                  >
-                    <img src={socialIcons.facebook} alt="Facebook" className="w-full h-full object-cover" />
-                  </a>
-                )}
-                {!socialIcons?.telegram && !socialIcons?.tiktok && !socialIcons?.facebook && (
+                ))}
+                {allSocialLinks.length === 0 && (
                   <p className="text-xs sm:text-sm opacity-60" style={{ color: textColor }}>No social icons set</p>
                 )}
               </div>
