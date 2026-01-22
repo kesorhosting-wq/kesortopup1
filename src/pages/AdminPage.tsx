@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Settings, Package, CreditCard, Palette, Plus, Trash2, Edit2, LogOut, User, Save, X, ChevronDown, ChevronUp, DollarSign, Home, ArrowUp, ArrowDown, Key, ShoppingCart, QrCode, Link2, Link2Off, Shield, RefreshCw, Copy, Star, Wallet, Search, Download } from 'lucide-react';
+import { ArrowLeft, Settings, Package, CreditCard, Palette, Plus, Trash2, Edit2, LogOut, User, Save, X, ChevronDown, ChevronUp, DollarSign, Home, ArrowUp, ArrowDown, Key, ShoppingCart, QrCode, Link2, Link2Off, Shield, RefreshCw, Copy, Star, Wallet, Search } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,8 +32,6 @@ import GameImageSearch from '@/components/admin/GameImageSearch';
 import AppStoreImageSync, { AppStoreBulkSync } from '@/components/admin/AppStoreImageSync';
 import { useG2BulkProductStatus } from '@/hooks/useG2BulkProductStatus';
 import { AdminWalletTab } from '@/components/admin/AdminWalletTab';
-import { DataExportTab } from '@/components/admin/DataExportTab';
-import { DataImportTab } from '@/components/admin/DataImportTab';
 
 const AdminPage: React.FC = () => {
   const { user, signOut } = useAuth();
@@ -297,7 +295,7 @@ const AdminPage: React.FC = () => {
         
         <div className="container mx-auto px-4 py-6">
           <Tabs defaultValue="settings" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-10 bg-card border border-border">
+            <TabsList className="grid w-full grid-cols-9 bg-card border border-border">
               <TabsTrigger value="settings" className="data-[state=active]:bg-gold data-[state=active]:text-primary-foreground text-xs sm:text-sm">
                 <Settings className="w-4 h-4 sm:mr-2" />
                 <span className="hidden sm:inline">Site</span>
@@ -333,10 +331,6 @@ const AdminPage: React.FC = () => {
               <TabsTrigger value="api" className="data-[state=active]:bg-gold data-[state=active]:text-primary-foreground text-xs sm:text-sm">
                 <Key className="w-4 h-4 sm:mr-2" />
                 <span className="hidden sm:inline">API</span>
-              </TabsTrigger>
-              <TabsTrigger value="export" className="data-[state=active]:bg-gold data-[state=active]:text-primary-foreground text-xs sm:text-sm">
-                <Download className="w-4 h-4 sm:mr-2" />
-                <span className="hidden sm:inline">Export</span>
               </TabsTrigger>
             </TabsList>
             
@@ -2692,12 +2686,6 @@ const AdminPage: React.FC = () => {
             {/* API Settings */}
             <TabsContent value="api">
               <ApiSettingsTab />
-            </TabsContent>
-
-            {/* Data Export & Import */}
-            <TabsContent value="export" className="space-y-6">
-              <DataExportTab />
-              <DataImportTab />
             </TabsContent>
           </Tabs>
         </div>
