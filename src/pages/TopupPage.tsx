@@ -279,9 +279,14 @@ const TopupPage: React.FC = () => {
       return;
     }
     
-    // For games with server ID, check if it's required
-    if (hasMultipleFields && !serverId.trim()) {
-      toast({ title: gameIdConfig?.validation || "សូមបញ្ចូល Server ID", variant: "destructive" });
+    // Check if zone/server is required (from database config or field config)
+    const zoneRequired = gameVerificationConfig?.requires_zone || hasMultipleFields;
+    if (zoneRequired && !serverId.trim()) {
+      toast({ 
+        title: "សូមបញ្ចូល Server ID", 
+        description: `${game?.name} requires a Server/Zone ID`,
+        variant: "destructive" 
+      });
       return;
     }
 
