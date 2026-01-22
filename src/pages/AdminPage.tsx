@@ -33,6 +33,7 @@ import AppStoreImageSync, { AppStoreBulkSync } from '@/components/admin/AppStore
 import { useG2BulkProductStatus } from '@/hooks/useG2BulkProductStatus';
 import { AdminWalletTab } from '@/components/admin/AdminWalletTab';
 import { DataExportTab } from '@/components/admin/DataExportTab';
+import { DataImportTab } from '@/components/admin/DataImportTab';
 
 const AdminPage: React.FC = () => {
   const { user, signOut } = useAuth();
@@ -2693,9 +2694,10 @@ const AdminPage: React.FC = () => {
               <ApiSettingsTab />
             </TabsContent>
 
-            {/* Data Export */}
-            <TabsContent value="export">
+            {/* Data Export & Import */}
+            <TabsContent value="export" className="space-y-6">
               <DataExportTab />
+              <DataImportTab />
             </TabsContent>
           </Tabs>
         </div>
