@@ -27,6 +27,7 @@ import G2BulkDebugLogs from '@/components/admin/G2BulkDebugLogs';
 import PackageStockBadge from '@/components/admin/PackageStockBadge';
 import AIGameImageGenerator, { AIBulkImageGenerator } from '@/components/admin/AIGameImageGenerator';
 import { AIBulkPackageIconGenerator } from '@/components/admin/AIPackageIconGenerator';
+import GameImageSearch from '@/components/admin/GameImageSearch';
 import { useG2BulkProductStatus } from '@/hooks/useG2BulkProductStatus';
 import { AdminWalletTab } from '@/components/admin/AdminWalletTab';
 
@@ -1452,13 +1453,20 @@ const AdminPage: React.FC = () => {
                   <div className="flex gap-4 items-end flex-wrap">
                     <div className="w-24">
                       <label className="text-sm font-medium mb-2 block">Icon</label>
-                      <ImageUpload
-                        value={newGame.image}
-                        onChange={(url) => setNewGame(prev => ({ ...prev, image: url }))}
-                        folder="games"
-                        aspectRatio="square"
-                        placeholder="Game"
-                      />
+                      <div className="flex flex-col gap-2">
+                        <ImageUpload
+                          value={newGame.image}
+                          onChange={(url) => setNewGame(prev => ({ ...prev, image: url }))}
+                          folder="games"
+                          aspectRatio="square"
+                          placeholder="Game"
+                        />
+                        <GameImageSearch
+                          gameName={newGame.name}
+                          onImageSelect={(url) => setNewGame(prev => ({ ...prev, image: url }))}
+                          buttonSize="sm"
+                        />
+                      </div>
                     </div>
                     <div className="w-32">
                       <label className="text-sm font-medium mb-2 block">Cover Image</label>
@@ -1524,12 +1532,19 @@ const AdminPage: React.FC = () => {
                           <div className="flex gap-4 items-start flex-wrap">
                             <div className="w-20">
                               <label className="text-xs text-muted-foreground mb-1 block">Icon</label>
-                              <ImageUpload
-                                value={editGameData.image}
-                                onChange={(url) => setEditGameData(prev => ({ ...prev, image: url }))}
-                                folder="games"
-                                aspectRatio="square"
-                              />
+                              <div className="flex flex-col gap-1">
+                                <ImageUpload
+                                  value={editGameData.image}
+                                  onChange={(url) => setEditGameData(prev => ({ ...prev, image: url }))}
+                                  folder="games"
+                                  aspectRatio="square"
+                                />
+                                <GameImageSearch
+                                  gameName={editGameData.name}
+                                  onImageSelect={(url) => setEditGameData(prev => ({ ...prev, image: url }))}
+                                  buttonSize="icon"
+                                />
+                              </div>
                             </div>
                             <div className="w-32">
                               <label className="text-xs text-muted-foreground mb-1 block">Cover Image</label>
