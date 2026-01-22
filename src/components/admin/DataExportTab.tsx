@@ -1,20 +1,22 @@
 import React, { useState } from 'react';
-import { Download, FileJson, Database, Loader2 } from 'lucide-react';
+import { Download, FileJson, Database, Loader2, CheckSquare, Square } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
 const EXPORT_TABLES = [
-  'site_settings',
-  'games',
-  'packages',
-  'special_packages',
-  'payment_gateways',
-  'payment_qr_settings',
-  'game_verification_configs',
-  'g2bulk_products',
-  'api_configurations',
+  { key: 'site_settings', label: 'Site Settings' },
+  { key: 'games', label: 'Games' },
+  { key: 'packages', label: 'Packages' },
+  { key: 'special_packages', label: 'Special Packages' },
+  { key: 'payment_gateways', label: 'Payment Gateways' },
+  { key: 'payment_qr_settings', label: 'Payment QR Settings' },
+  { key: 'game_verification_configs', label: 'Game Verification Configs' },
+  { key: 'g2bulk_products', label: 'G2Bulk Products' },
+  { key: 'api_configurations', label: 'API Configurations' },
 ] as const;
 
 // Fields to redact for security
@@ -25,9 +27,27 @@ const REDACT_FIELDS: Record<string, string[]> = {
 
 export const DataExportTab: React.FC = () => {
   const [isExporting, setIsExporting] = useState(false);
+  const [selectedTables, setSelectedTables] = useState<string[]>(
+    EXPORT_TABLES.map(t => t.key)
+  );
+
+  const toggleTable = (tableKey: string) => {
+    setSelectedTables(prev => 
+      prev.includes(tableKey) 
+        ? prev.filter(t => t !== tableKey)
+        : [...prev, tableKey]
+    );
+  };
+
+  const selectAll = () => {
+    setSelectedTables(EXPORT_TABLES.map(t => t.key));
+  };
+
+  const deselectAll = () => {
+    setSelectedTables([]);
+  };
 
   const fetchTableData = async (tableName: string) => {
-    // Use type assertion to allow dynamic table names
     const { data, error } = await supabase
       .from(tableName as 'games')
       .select('*');
@@ -55,11 +75,16 @@ export const DataExportTab: React.FC = () => {
   };
 
   const handleExportJSON = async () => {
+    if (selectedTables.length === 0) {
+      toast({ title: 'No tables selected', variant: 'destructive' });
+      return;
+    }
+    
     setIsExporting(true);
     try {
       const exportData: Record<string, unknown[]> = {};
       
-      for (const table of EXPORT_TABLES) {
+      for (const table of selectedTables) {
         exportData[table] = await fetchTableData(table);
       }
       
@@ -93,6 +118,11 @@ export const DataExportTab: React.FC = () => {
   };
 
   const handleExportSQL = async () => {
+    if (selectedTables.length === 0) {
+      toast({ title: 'No tables selected', variant: 'destructive' });
+      return;
+    }
+    
     setIsExporting(true);
     try {
       const sqlStatements: string[] = [];
@@ -100,7 +130,7 @@ export const DataExportTab: React.FC = () => {
       sqlStatements.push(`-- Generated: ${new Date().toISOString()}`);
       sqlStatements.push('-- Note: Sensitive fields have been redacted\n');
 
-      for (const table of EXPORT_TABLES) {
+      for (const table of selectedTables) {
         const data = await fetchTableData(table);
         
         if (data.length === 0) {
@@ -151,11 +181,53 @@ export const DataExportTab: React.FC = () => {
             Export Database
           </CardTitle>
           <CardDescription>
-            Download your database configuration as JSON or SQL format. 
-            Sensitive fields (API keys, secrets) are automatically redacted.
+            Select the data you want to export. Sensitive fields are automatically redacted.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-6">
+          {/* Table Selection */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h4 className="font-medium">Select Tables to Export</h4>
+              <div className="flex gap-2">
+                <Button variant="ghost" size="sm" onClick={selectAll}>
+                  <CheckSquare className="w-4 h-4 mr-1" />
+                  Select All
+                </Button>
+                <Button variant="ghost" size="sm" onClick={deselectAll}>
+                  <Square className="w-4 h-4 mr-1" />
+                  Deselect All
+                </Button>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              {EXPORT_TABLES.map(table => (
+                <div 
+                  key={table.key} 
+                  className="flex items-center space-x-2 p-2 rounded-lg hover:bg-muted/50 transition-colors"
+                >
+                  <Checkbox
+                    id={table.key}
+                    checked={selectedTables.includes(table.key)}
+                    onCheckedChange={() => toggleTable(table.key)}
+                  />
+                  <Label 
+                    htmlFor={table.key} 
+                    className="text-sm cursor-pointer flex-1"
+                  >
+                    {table.label}
+                  </Label>
+                </div>
+              ))}
+            </div>
+            
+            <p className="text-sm text-muted-foreground">
+              {selectedTables.length} of {EXPORT_TABLES.length} tables selected
+            </p>
+          </div>
+
+          {/* Export Buttons */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Card className="border-2 hover:border-gold transition-colors">
               <CardContent className="pt-6">
@@ -169,7 +241,7 @@ export const DataExportTab: React.FC = () => {
                   </div>
                   <Button 
                     onClick={handleExportJSON}
-                    disabled={isExporting}
+                    disabled={isExporting || selectedTables.length === 0}
                     className="w-full"
                   >
                     {isExporting ? (
@@ -195,7 +267,7 @@ export const DataExportTab: React.FC = () => {
                   </div>
                   <Button 
                     onClick={handleExportSQL}
-                    disabled={isExporting}
+                    disabled={isExporting || selectedTables.length === 0}
                     className="w-full"
                     variant="outline"
                   >
@@ -209,20 +281,6 @@ export const DataExportTab: React.FC = () => {
                 </div>
               </CardContent>
             </Card>
-          </div>
-
-          <div className="bg-muted/50 rounded-lg p-4">
-            <h4 className="font-medium mb-2">Included Tables:</h4>
-            <div className="flex flex-wrap gap-2">
-              {EXPORT_TABLES.map(table => (
-                <span 
-                  key={table} 
-                  className="px-2 py-1 bg-background rounded text-xs font-mono"
-                >
-                  {table}
-                </span>
-              ))}
-            </div>
           </div>
         </CardContent>
       </Card>
