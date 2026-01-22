@@ -139,6 +139,47 @@ serve(async (req) => {
         );
       }
 
+      // Validate orderId is provided for purchases
+      if (!orderId) {
+        return new Response(
+          JSON.stringify({ error: "Order ID is required for purchases" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Verify the order exists and belongs to this user
+      const { data: order, error: orderCheckError } = await supabase
+        .from("topup_orders")
+        .select("id, user_id, status, amount")
+        .eq("id", orderId)
+        .single();
+
+      if (orderCheckError || !order) {
+        log('ERROR', 'Order not found', { orderId, error: orderCheckError?.message });
+        return new Response(
+          JSON.stringify({ error: "Order not found" }),
+          { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Verify the order belongs to the authenticated user
+      if (order.user_id !== user.id) {
+        log('ERROR', 'Order does not belong to user', { orderId, orderUserId: order.user_id, userId: user.id });
+        return new Response(
+          JSON.stringify({ error: "Unauthorized" }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Verify order is in pending status
+      if (order.status !== 'pending') {
+        log('WARN', 'Order already processed', { orderId, status: order.status });
+        return new Response(
+          JSON.stringify({ error: "Order already processed" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
       // Get current balance
       const { data: profile } = await supabase
         .from("profiles")
@@ -168,7 +209,7 @@ serve(async (req) => {
           balance_before: currentBalance,
           balance_after: newBalance,
           description: `Game top-up purchase`,
-          reference_id: orderId || null
+          reference_id: orderId
         });
 
       if (txError) {
@@ -179,10 +220,32 @@ serve(async (req) => {
         );
       }
 
-      log('INFO', 'Wallet purchase successful', { userId: user.id, amount, newBalance });
+      // SERVER-SIDE: Update order status to 'paid' after successful wallet deduction
+      // This prevents client-side manipulation of order status
+      const { error: orderUpdateError } = await supabase
+        .from("topup_orders")
+        .update({ 
+          status: 'paid', 
+          payment_method: 'Wallet',
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", orderId)
+        .eq("user_id", user.id); // Extra safety check
+
+      if (orderUpdateError) {
+        log('ERROR', 'Failed to update order status', { orderId, error: orderUpdateError.message });
+        // Note: Wallet was already deducted, but order update failed
+        // The order will remain in pending status - admin should handle manually
+        return new Response(
+          JSON.stringify({ error: "Payment processed but order update failed. Please contact support.", newBalance }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      log('INFO', 'Wallet purchase successful', { userId: user.id, amount, newBalance, orderId });
 
       return new Response(
-        JSON.stringify({ success: true, newBalance }),
+        JSON.stringify({ success: true, newBalance, orderId }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }

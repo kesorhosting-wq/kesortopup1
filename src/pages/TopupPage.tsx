@@ -1021,13 +1021,8 @@ const TopupPage: React.FC = () => {
         if (walletError) throw walletError;
         if (walletResult?.error) throw new Error(walletResult.error);
 
-        // Update order status to paid
-        const { error: updateError } = await supabase
-          .from('topup_orders')
-          .update({ status: 'paid', payment_method: 'Wallet' })
-          .eq('id', orderId);
-
-        if (updateError) throw updateError;
+        // Order status is now updated server-side by the wallet-topup edge function
+        // This prevents client-side manipulation of order status
 
         toast({
           title: "✓ បង់ប្រាក់បានជោគជ័យ!",
