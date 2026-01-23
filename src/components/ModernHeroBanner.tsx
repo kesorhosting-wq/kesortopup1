@@ -160,7 +160,7 @@ const ModernHeroBanner: React.FC<ModernHeroBannerProps> = ({
                 <img 
                   src={image} 
                   alt={`Banner ${index + 1}`}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-contain"
                 />
                 {/* Overlay gradient for better text readability */}
                 <div className="absolute inset-0 bg-gradient-to-t from-background/50 via-transparent to-transparent" />
