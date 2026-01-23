@@ -119,7 +119,7 @@ const ModernHeroBanner: React.FC<ModernHeroBannerProps> = ({
   return (
     <div className="relative w-full flex justify-center overflow-visible p-3 sm:p-4">
       {/* Corner Borders - OUTSIDE */}
-      <div className="relative w-full max-w-3xl">
+      <div className="relative w-[85%] max-w-5xl">
         <CornerBorders />
         
         <div className="relative w-full overflow-hidden group rounded-lg shadow-lg">
