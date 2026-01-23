@@ -6,7 +6,6 @@ import {
   type CarouselApi,
 } from '@/components/ui/carousel';
 import Autoplay from 'embla-carousel-autoplay';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface ModernHeroBannerProps {
   bannerImage?: string;
@@ -162,7 +161,7 @@ const ModernHeroBanner: React.FC<ModernHeroBannerProps> = ({
                 <img 
                   src={image} 
                   alt={`Banner ${index + 1}`}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-contain"
                 />
                 {/* Overlay gradient for better text readability */}
                 <div className="absolute inset-0 bg-gradient-to-t from-background/50 via-transparent to-transparent" />
@@ -171,25 +170,6 @@ const ModernHeroBanner: React.FC<ModernHeroBannerProps> = ({
           ))}
         </CarouselContent>
 
-        {/* Navigation arrows */}
-        {hasMultipleImages && (
-          <>
-            <button
-              onClick={() => api?.scrollPrev()}
-              className="absolute left-4 sm:left-6 top-1/2 -translate-y-1/2 z-10 p-2 sm:p-3 bg-background/80 backdrop-blur-sm rounded-full border border-border hover:bg-gold hover:border-gold hover:text-primary-foreground transition-all duration-300 opacity-0 group-hover:opacity-100"
-              aria-label="Previous slide"
-            >
-              <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
-            </button>
-            <button
-              onClick={() => api?.scrollNext()}
-              className="absolute right-4 sm:right-6 top-1/2 -translate-y-1/2 z-10 p-2 sm:p-3 bg-background/80 backdrop-blur-sm rounded-full border border-border hover:bg-gold hover:border-gold hover:text-primary-foreground transition-all duration-300 opacity-0 group-hover:opacity-100"
-              aria-label="Next slide"
-            >
-              <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
-            </button>
-          </>
-        )}
 
         {/* Modern dots indicator */}
         {hasMultipleImages && (
