@@ -42,7 +42,9 @@ const Index: React.FC = () => {
           <ModernHeroBanner 
             bannerImage={settings.bannerImage} 
             bannerImages={settings.bannerImages}
-            bannerHeight={settings.bannerHeight} 
+            bannerHeight={settings.bannerHeight}
+            cornerBorderColor={settings.frameColor}
+            cornerBorderWidth={settings.frameBorderWidth}
           />
         </div>
         
