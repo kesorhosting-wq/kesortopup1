@@ -117,11 +117,12 @@ const ModernHeroBanner: React.FC<ModernHeroBannerProps> = ({
   }
 
   return (
-    <div className="relative w-full overflow-visible p-2">
+    <div className="relative w-full flex justify-center overflow-visible p-3 sm:p-4">
       {/* Corner Borders - OUTSIDE */}
-      <CornerBorders />
-      
-      <div className="relative w-full overflow-hidden group rounded-lg shadow-lg">
+      <div className="relative w-full max-w-3xl">
+        <CornerBorders />
+        
+        <div className="relative w-full overflow-hidden group rounded-lg shadow-lg">
         <Carousel
           setApi={setApi}
           opts={{
@@ -140,11 +141,11 @@ const ModernHeroBanner: React.FC<ModernHeroBannerProps> = ({
           <CarouselContent className="-ml-0">
             {allImages.map((image, index) => (
               <CarouselItem key={index} className="pl-0">
-                <div className="w-full h-[140px] sm:h-[200px] relative">
+                <div className="w-full relative">
                   <img 
                     src={image} 
                     alt={`Banner ${index + 1}`}
-                    className="w-full h-full object-cover object-center"
+                    className="w-full h-auto block"
                   />
                 </div>
               </CarouselItem>
@@ -169,6 +170,7 @@ const ModernHeroBanner: React.FC<ModernHeroBannerProps> = ({
             </div>
           )}
         </Carousel>
+        </div>
       </div>
     </div>
   );
