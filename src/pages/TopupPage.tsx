@@ -654,28 +654,82 @@ const TopupPage: React.FC = () => {
             
             {/* Verification Status Display */}
             {verifiedUser && (
-              <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-4 mb-4">
-                <div className="flex items-center gap-2 text-emerald-400">
-                  <UserCheck className="w-5 h-5" />
-                  <span className="font-bold">Verified Successfully!</span>
-                </div>
-                <div className="mt-2 text-emerald-300/80 text-sm">
-                  <p className="break-all">
-                    <strong>Username:</strong> {verifiedUser.username}
-                  </p>
-                  <p><strong>ID:</strong> {verifiedUser.id}</p>
-                  {verifiedUser.serverId && (
-                    <p><strong>Server:</strong> {verifiedUser.serverId}</p>
-                  )}
+              <div className="relative overflow-hidden rounded-2xl mb-4 animate-fade-in">
+                {/* Gradient Background */}
+                <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/20 via-teal-500/20 to-cyan-500/20" />
+                <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-transparent" />
+                
+                {/* Animated Border */}
+                <div className="absolute inset-0 rounded-2xl border-2 border-emerald-500/40" />
+                
+                {/* Shimmer Effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full animate-[shimmer_2s_infinite]" 
+                     style={{ animation: 'shimmer 2s infinite' }} />
+                
+                <div className="relative p-4 sm:p-5">
+                  {/* Success Header */}
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="relative">
+                      <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-lg shadow-emerald-500/30">
+                        <CheckCircle className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+                      </div>
+                      {/* Pulse ring */}
+                      <div className="absolute inset-0 rounded-full border-2 border-emerald-400 animate-ping opacity-20" />
+                    </div>
+                    <div>
+                      <h3 className="text-emerald-400 font-bold text-base sm:text-lg">✓ ផ្ទៀងផ្ទាត់បានជោគជ័យ</h3>
+                      <p className="text-emerald-300/60 text-xs sm:text-sm">Verification Complete</p>
+                    </div>
+                  </div>
+                  
+                  {/* User Info Card */}
+                  <div className="bg-background/40 backdrop-blur-sm rounded-xl p-3 sm:p-4 border border-emerald-500/20">
+                    {/* Username - Large Display with Unicode Support */}
+                    <div className="flex items-center gap-2 mb-3">
+                      <UserCheck className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400 flex-shrink-0" />
+                      <span className="text-emerald-300/70 text-xs sm:text-sm">Username:</span>
+                    </div>
+                    <p 
+                      className="text-lg sm:text-xl md:text-2xl font-bold text-white break-all leading-relaxed mb-3"
+                      style={{ fontFamily: "'Noto Sans', 'Noto Sans Khmer', 'Segoe UI Emoji', 'Apple Color Emoji', system-ui, sans-serif" }}
+                    >
+                      {verifiedUser.username}
+                    </p>
+                    
+                    {/* ID & Server Info */}
+                    <div className="flex flex-wrap gap-2 sm:gap-3">
+                      <div className="flex-1 min-w-[120px] bg-emerald-500/10 rounded-lg px-3 py-2">
+                        <p className="text-[10px] sm:text-xs text-emerald-300/60 mb-0.5">Player ID</p>
+                        <p className="text-sm sm:text-base font-semibold text-emerald-200 break-all">{verifiedUser.id}</p>
+                      </div>
+                      {verifiedUser.serverId && (
+                        <div className="bg-emerald-500/10 rounded-lg px-3 py-2">
+                          <p className="text-[10px] sm:text-xs text-emerald-300/60 mb-0.5">Server</p>
+                          <p className="text-sm sm:text-base font-semibold text-emerald-200">{verifiedUser.serverId}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
 
             {verificationError && (
-              <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 mb-4">
-                <div className="flex items-center gap-2 text-red-400">
-                  <XCircle className="w-5 h-5" />
-                  <span className="text-sm">{verificationError}</span>
+              <div className="relative overflow-hidden rounded-2xl mb-4 animate-fade-in">
+                {/* Error Background */}
+                <div className="absolute inset-0 bg-gradient-to-r from-red-500/15 via-rose-500/10 to-red-500/15" />
+                <div className="absolute inset-0 rounded-2xl border border-red-500/30" />
+                
+                <div className="relative p-4 sm:p-5">
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-red-400 to-rose-500 flex items-center justify-center shadow-lg shadow-red-500/20 flex-shrink-0">
+                      <XCircle className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-red-400 font-bold text-sm sm:text-base mb-1">ផ្ទៀងផ្ទាត់បរាជ័យ</h3>
+                      <p className="text-red-300/80 text-xs sm:text-sm break-words">{verificationError}</p>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}

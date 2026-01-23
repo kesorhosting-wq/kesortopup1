@@ -14,10 +14,10 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['"Noto Sans"', 'Battambang', '"Noto Sans Symbols 2"', 'system-ui', 'sans-serif'],
+        sans: ['"Noto Sans"', '"Noto Sans Khmer"', 'Battambang', '"Noto Sans Symbols 2"', 'system-ui', 'sans-serif'],
         display: ['Cinzel', 'serif'],
-        khmer: ['Battambang', '"Noto Sans"', 'cursive'],
-        unicode: ['"Noto Sans"', '"Noto Sans Symbols 2"', '"Segoe UI Symbol"', 'sans-serif'],
+        khmer: ['Battambang', '"Noto Sans Khmer"', '"Noto Sans"', 'cursive'],
+        unicode: ['"Noto Sans"', '"Noto Sans Khmer"', '"Noto Sans Symbols 2"', '"Segoe UI Symbol"', '"Apple Color Emoji"', '"Segoe UI Emoji"', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -96,11 +96,21 @@ export default {
           "0%, 100%": { boxShadow: "0 0 20px hsl(43 74% 49% / 0.4)" },
           "50%": { boxShadow: "0 0 40px hsl(43 74% 49% / 0.6)" },
         },
+        "shimmer": {
+          "0%": { transform: "translateX(-100%)" },
+          "100%": { transform: "translateX(100%)" },
+        },
+        "fade-in": {
+          "0%": { opacity: "0", transform: "translateY(10px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "pulse-gold": "pulse-gold 2s ease-in-out infinite",
+        "shimmer": "shimmer 2s infinite",
+        "fade-in": "fade-in 0.3s ease-out",
       },
       backgroundImage: {
         'gradient-gold': 'var(--gradient-gold)',
