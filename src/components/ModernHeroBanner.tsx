@@ -49,8 +49,6 @@ const ModernHeroBanner: React.FC<ModernHeroBannerProps> = ({
   const hasImages = allImages.length > 0;
   const hasMultipleImages = allImages.length > 1;
 
-  // Use aspect ratio for proper image sizing (similar to kesortopup.cam ~3:1 ratio)
-  const aspectRatio = "3/1";
 
   // Corner border styles
   const cornerStyle = {
@@ -101,10 +99,9 @@ const ModernHeroBanner: React.FC<ModernHeroBannerProps> = ({
       <div className="relative w-full overflow-visible p-2">
         <CornerBorders />
         <div 
-          className="relative w-full overflow-hidden rounded-lg shadow-lg bg-gradient-to-br from-gold/20 via-cream to-gold-light/20"
-          style={{ aspectRatio }}
+          className="relative w-full overflow-hidden rounded-lg shadow-lg bg-gradient-to-br from-gold/20 via-cream to-gold-light/20 py-12"
         >
-          <div className="absolute inset-0 flex items-center justify-center">
+          <div className="flex items-center justify-center">
             <div className="text-center px-4">
               <h1 className="font-display text-2xl sm:text-4xl font-bold gold-text mb-2">
                 Welcome to Top Up
@@ -124,10 +121,7 @@ const ModernHeroBanner: React.FC<ModernHeroBannerProps> = ({
       {/* Corner Borders - OUTSIDE */}
       <CornerBorders />
       
-      <div 
-        className="relative w-full overflow-hidden group rounded-lg shadow-lg"
-        style={{ aspectRatio }}
-      >
+      <div className="relative w-full overflow-hidden group rounded-lg shadow-lg">
         <Carousel
           setApi={setApi}
           opts={{
@@ -141,16 +135,16 @@ const ModernHeroBanner: React.FC<ModernHeroBannerProps> = ({
               stopOnMouseEnter: true,
             }),
           ] : []}
-          className="w-full h-full"
+          className="w-full"
         >
-          <CarouselContent className="h-full -ml-0">
+          <CarouselContent className="-ml-0">
             {allImages.map((image, index) => (
-              <CarouselItem key={index} className="h-full pl-0">
-                <div className="w-full h-full relative">
+              <CarouselItem key={index} className="pl-0">
+                <div className="w-full relative">
                   <img 
                     src={image} 
                     alt={`Banner ${index + 1}`}
-                    className="w-full h-full object-cover"
+                    className="w-full h-auto block"
                   />
                 </div>
               </CarouselItem>
