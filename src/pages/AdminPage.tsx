@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Settings, Package, CreditCard, Palette, Plus, Trash2, Edit2, LogOut, User, Save, X, ChevronDown, ChevronUp, DollarSign, Home, ArrowUp, ArrowDown, Key, ShoppingCart, QrCode, Link2, Link2Off, Shield, RefreshCw, Copy, Star, Wallet, Search, Database } from 'lucide-react';
+import { ArrowLeft, Settings, Package, CreditCard, Palette, Plus, Trash2, Edit2, LogOut, User, Save, X, ChevronDown, ChevronUp, DollarSign, Home, ArrowUp, ArrowDown, Key, ShoppingCart, QrCode, Link2, Link2Off, Shield, RefreshCw, Copy, Star, Wallet, Search, Database, Gamepad2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -726,6 +726,47 @@ const AdminPage: React.FC = () => {
                           folder="card-borders"
                           aspectRatio="square"
                           placeholder="Upload Border"
+                        />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Games Section Background */}
+                <Card className="border-gold/30">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Gamepad2 className="w-5 h-5 text-gold" />
+                      Games Section Background
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <div>
+                        <label className="text-sm font-medium mb-2 block">Section Background Color</label>
+                        <div className="flex gap-2">
+                          <input 
+                            type="color" 
+                            value={settings.gamesSectionBgColor || '#1a1a1a'}
+                            onChange={(e) => handleUpdateSettings('gamesSectionBgColor', e.target.value)}
+                            className="w-12 h-10 rounded cursor-pointer"
+                          />
+                          <Input 
+                            value={settings.gamesSectionBgColor}
+                            onChange={(e) => handleUpdateSettings('gamesSectionBgColor', e.target.value)}
+                            className="flex-1 border-gold/50"
+                            placeholder="Leave empty for default"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium mb-2 block">Section Background Image</label>
+                        <ImageUpload
+                          value={settings.gamesSectionBgImage}
+                          onChange={(url) => handleUpdateSettings('gamesSectionBgImage', url)}
+                          folder="games-section"
+                          aspectRatio="wide"
+                          placeholder="Upload Background"
                         />
                       </div>
                     </div>

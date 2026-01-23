@@ -130,6 +130,9 @@ export interface SiteSettings {
   paymentSectionBgColor: string;
   paymentSectionBgImage: string;
   paymentSectionTextColor: string;
+  // Games section settings
+  gamesSectionBgColor: string;
+  gamesSectionBgImage: string;
 }
 
 interface SiteContextType {
@@ -233,6 +236,9 @@ const defaultSettings: SiteSettings = {
   paymentSectionBgColor: '',
   paymentSectionBgImage: '',
   paymentSectionTextColor: '',
+  // Games section defaults
+  gamesSectionBgColor: '',
+  gamesSectionBgImage: '',
 };
 
 const SiteContext = createContext<SiteContextType | undefined>(undefined);
@@ -362,6 +368,8 @@ export const SiteProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           if (row.key === 'paymentSectionBgColor') loadedSettings.paymentSectionBgColor = row.value as string;
           if (row.key === 'paymentSectionBgImage') loadedSettings.paymentSectionBgImage = row.value as string;
           if (row.key === 'paymentSectionTextColor') loadedSettings.paymentSectionTextColor = row.value as string;
+          if (row.key === 'gamesSectionBgColor') loadedSettings.gamesSectionBgColor = row.value as string;
+          if (row.key === 'gamesSectionBgImage') loadedSettings.gamesSectionBgImage = row.value as string;
           // Payment methods are now static (ABA, Wing, KHQR), skip loading from site_settings
           if (row.key === 'siteIcon') loadedSettings.siteIcon = row.value as string;
           if (row.key === 'browserTitle') loadedSettings.browserTitle = row.value as string;
