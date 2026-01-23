@@ -1,35 +1,53 @@
-import React, { useState } from 'react';
-import { Download, FileJson, Database, Loader2, CheckSquare, Square } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Download, Upload, FileJson, Database, Loader2, CheckSquare, Square, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
 const EXPORT_TABLES = [
-  { key: 'site_settings', label: 'Site Settings' },
-  { key: 'games', label: 'Games' },
-  { key: 'packages', label: 'Packages' },
-  { key: 'special_packages', label: 'Special Packages' },
-  { key: 'payment_gateways', label: 'Payment Gateways' },
-  { key: 'payment_qr_settings', label: 'Payment QR Settings' },
-  { key: 'game_verification_configs', label: 'Game Verification Configs' },
-  { key: 'g2bulk_products', label: 'G2Bulk Products' },
-  { key: 'api_configurations', label: 'API Configurations' },
+  { key: 'site_settings', label: 'Site Settings', uniqueKey: 'key' },
+  { key: 'games', label: 'Games', uniqueKey: 'id' },
+  { key: 'packages', label: 'Packages', uniqueKey: 'id' },
+  { key: 'special_packages', label: 'Special Packages', uniqueKey: 'id' },
+  { key: 'payment_gateways', label: 'Payment Gateways', uniqueKey: 'slug' },
+  { key: 'payment_qr_settings', label: 'Payment QR Settings', uniqueKey: 'payment_method' },
+  { key: 'game_verification_configs', label: 'Game Verification Configs', uniqueKey: 'game_name' },
+  { key: 'g2bulk_products', label: 'G2Bulk Products', uniqueKey: 'g2bulk_product_id' },
+  { key: 'api_configurations', label: 'API Configurations', uniqueKey: 'api_name' },
 ] as const;
 
-// Fields to redact for security
+type TableKey = typeof EXPORT_TABLES[number]['key'];
+
+// Fields to redact for security (export only)
 const REDACT_FIELDS: Record<string, string[]> = {
   api_configurations: ['api_secret', 'api_uid'],
   payment_gateways: ['config'],
 };
 
+// Fields to skip on import (auto-generated or should not be overwritten)
+const SKIP_IMPORT_FIELDS = ['id', 'created_at', 'updated_at'];
+
 export const DataExportTab: React.FC = () => {
   const [isExporting, setIsExporting] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
   const [selectedTables, setSelectedTables] = useState<string[]>(
     EXPORT_TABLES.map(t => t.key)
   );
+  const [importPreview, setImportPreview] = useState<Record<string, unknown[]> | null>(null);
+  const [showImportDialog, setShowImportDialog] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const toggleTable = (tableKey: string) => {
     setSelectedTables(prev => 
@@ -172,8 +190,150 @@ export const DataExportTab: React.FC = () => {
     }
   };
 
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const content = e.target?.result as string;
+        const data = JSON.parse(content) as Record<string, unknown[]>;
+        
+        // Validate structure
+        const validTables = EXPORT_TABLES.map(t => t.key);
+        const importTables = Object.keys(data).filter(key => validTables.includes(key as TableKey));
+        
+        if (importTables.length === 0) {
+          toast({ 
+            title: 'Invalid file', 
+            description: 'No valid tables found in the import file',
+            variant: 'destructive' 
+          });
+          return;
+        }
+
+        // Filter to only valid tables
+        const filteredData: Record<string, unknown[]> = {};
+        importTables.forEach(table => {
+          filteredData[table] = data[table];
+        });
+
+        setImportPreview(filteredData);
+        setShowImportDialog(true);
+      } catch (error) {
+        console.error('Parse error:', error);
+        toast({ 
+          title: 'Invalid JSON file', 
+          description: 'Could not parse the import file',
+          variant: 'destructive' 
+        });
+      }
+    };
+    reader.readAsText(file);
+    
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const processImportRow = (row: Record<string, unknown>): Record<string, unknown> => {
+    const processed: Record<string, unknown> = {};
+    
+    for (const [key, value] of Object.entries(row)) {
+      // Skip auto-generated fields
+      if (SKIP_IMPORT_FIELDS.includes(key)) continue;
+      
+      // Skip redacted fields
+      if (value === '[REDACTED]') continue;
+      
+      processed[key] = value;
+    }
+    
+    return processed;
+  };
+
+  const handleImport = async () => {
+    if (!importPreview) return;
+    
+    setIsImporting(true);
+    const results: { table: string; success: number; errors: number }[] = [];
+
+    try {
+      for (const [tableName, rows] of Object.entries(importPreview)) {
+        if (!Array.isArray(rows) || rows.length === 0) continue;
+        
+        const tableConfig = EXPORT_TABLES.find(t => t.key === tableName);
+        if (!tableConfig) continue;
+
+        let successCount = 0;
+        let errorCount = 0;
+
+        for (const row of rows) {
+          const processedRow = processImportRow(row as Record<string, unknown>);
+          
+          if (Object.keys(processedRow).length === 0) continue;
+
+          // Use upsert with the unique key for the table
+          const uniqueKey = tableConfig.uniqueKey;
+          const uniqueValue = (row as Record<string, unknown>)[uniqueKey];
+          
+          if (uniqueValue === undefined) {
+            // Just insert if no unique key value
+            const { error } = await supabase
+              .from(tableName as 'games')
+              .insert(processedRow as never);
+            
+            if (error) {
+              console.error(`Import error for ${tableName}:`, error);
+              errorCount++;
+            } else {
+              successCount++;
+            }
+          } else {
+            // Upsert by unique key
+            const { error } = await supabase
+              .from(tableName as 'games')
+              .upsert(
+                { ...processedRow, [uniqueKey]: uniqueValue } as never,
+                { onConflict: uniqueKey }
+              );
+            
+            if (error) {
+              console.error(`Import error for ${tableName}:`, error);
+              errorCount++;
+            } else {
+              successCount++;
+            }
+          }
+        }
+
+        results.push({ table: tableName, success: successCount, errors: errorCount });
+      }
+
+      const totalSuccess = results.reduce((sum, r) => sum + r.success, 0);
+      const totalErrors = results.reduce((sum, r) => sum + r.errors, 0);
+
+      toast({ 
+        title: 'Import completed', 
+        description: `${totalSuccess} records imported, ${totalErrors} errors`,
+        variant: totalErrors > 0 ? 'destructive' : 'default'
+      });
+
+      setShowImportDialog(false);
+      setImportPreview(null);
+    } catch (error) {
+      console.error('Import error:', error);
+      toast({ title: 'Import failed', variant: 'destructive' });
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
+      {/* Export Card */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -284,6 +444,98 @@ export const DataExportTab: React.FC = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Import Card */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Upload className="w-5 h-5" />
+            Import Database
+          </CardTitle>
+          <CardDescription>
+            Import data from a previously exported JSON file. Existing records will be updated.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Alert>
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>
+              <strong>Important:</strong> Import will upsert (insert or update) records. 
+              Redacted fields will be skipped. This action cannot be undone.
+            </AlertDescription>
+          </Alert>
+
+          <input
+            type="file"
+            ref={fileInputRef}
+            accept=".json"
+            onChange={handleFileSelect}
+            className="hidden"
+          />
+
+          <Button 
+            onClick={() => fileInputRef.current?.click()}
+            variant="outline"
+            className="w-full"
+          >
+            <Upload className="w-4 h-4 mr-2" />
+            Select JSON File to Import
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* Import Preview Dialog */}
+      <Dialog open={showImportDialog} onOpenChange={setShowImportDialog}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Confirm Import</DialogTitle>
+            <DialogDescription>
+              The following data will be imported:
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-2 max-h-64 overflow-y-auto">
+            {importPreview && Object.entries(importPreview).map(([table, rows]) => {
+              const tableLabel = EXPORT_TABLES.find(t => t.key === table)?.label || table;
+              return (
+                <div 
+                  key={table} 
+                  className="flex justify-between items-center p-2 bg-muted rounded"
+                >
+                  <span className="font-medium">{tableLabel}</span>
+                  <span className="text-sm text-muted-foreground">
+                    {Array.isArray(rows) ? rows.length : 0} records
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setShowImportDialog(false);
+                setImportPreview(null);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleImport}
+              disabled={isImporting}
+              className="bg-gold hover:bg-gold/90"
+            >
+              {isImporting ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Upload className="w-4 h-4 mr-2" />
+              )}
+              Import Data
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
