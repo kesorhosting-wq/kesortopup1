@@ -49,12 +49,12 @@ const ModernHeroBanner: React.FC<ModernHeroBannerProps> = ({
   const hasImages = allImages.length > 0;
   const hasMultipleImages = allImages.length > 1;
 
-  // Calculate responsive height - more compact
+  // Calculate responsive height - compact banner
   const getResponsiveHeight = () => {
     if (typeof window !== 'undefined' && window.innerWidth < 640) {
-      return Math.min(bannerHeight * 0.7, 160);
+      return 120; // Compact on mobile
     }
-    return Math.min(bannerHeight, 280);
+    return 180; // Compact on desktop
   };
 
   const [height, setHeight] = useState(getResponsiveHeight());
@@ -160,7 +160,7 @@ const ModernHeroBanner: React.FC<ModernHeroBannerProps> = ({
                 <img 
                   src={image} 
                   alt={`Banner ${index + 1}`}
-                  className="w-full h-full object-contain"
+                  className="w-full h-full object-cover"
                 />
                 {/* Overlay gradient for better text readability */}
                 <div className="absolute inset-0 bg-gradient-to-t from-background/50 via-transparent to-transparent" />
