@@ -140,11 +140,11 @@ const ModernHeroBanner: React.FC<ModernHeroBannerProps> = ({
           <CarouselContent className="-ml-0">
             {allImages.map((image, index) => (
               <CarouselItem key={index} className="pl-0">
-                <div className="w-full relative">
+                <div className="w-full h-[120px] sm:h-[180px] relative">
                   <img 
                     src={image} 
                     alt={`Banner ${index + 1}`}
-                    className="w-full h-auto block max-h-[150px] sm:max-h-[200px] object-contain"
+                    className="w-full h-full object-cover"
                   />
                 </div>
               </CarouselItem>
