@@ -60,7 +60,7 @@ const ModernHeroBanner: React.FC<ModernHeroBannerProps> = ({
     <>
       {/* Top Left Corner - OUTSIDE the container */}
       <div 
-        className="absolute -top-1 -left-1 sm:-top-2 sm:-left-2 w-4 h-4 sm:w-6 sm:h-6 z-20 pointer-events-none"
+        className="absolute -top-2 -left-2 sm:-top-3 sm:-left-3 w-5 h-5 sm:w-8 sm:h-8 z-20 pointer-events-none"
         style={{ 
           borderLeft: `${cornerBorderWidth}px solid ${cornerBorderColor}`,
           borderTop: `${cornerBorderWidth}px solid ${cornerBorderColor}`,
@@ -68,7 +68,7 @@ const ModernHeroBanner: React.FC<ModernHeroBannerProps> = ({
       />
       {/* Top Right Corner */}
       <div 
-        className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 w-4 h-4 sm:w-6 sm:h-6 z-20 pointer-events-none"
+        className="absolute -top-2 -right-2 sm:-top-3 sm:-right-3 w-5 h-5 sm:w-8 sm:h-8 z-20 pointer-events-none"
         style={{ 
           borderRight: `${cornerBorderWidth}px solid ${cornerBorderColor}`,
           borderTop: `${cornerBorderWidth}px solid ${cornerBorderColor}`,
@@ -76,7 +76,7 @@ const ModernHeroBanner: React.FC<ModernHeroBannerProps> = ({
       />
       {/* Bottom Left Corner */}
       <div 
-        className="absolute -bottom-1 -left-1 sm:-bottom-2 sm:-left-2 w-4 h-4 sm:w-6 sm:h-6 z-20 pointer-events-none"
+        className="absolute -bottom-2 -left-2 sm:-bottom-3 sm:-left-3 w-5 h-5 sm:w-8 sm:h-8 z-20 pointer-events-none"
         style={{ 
           borderLeft: `${cornerBorderWidth}px solid ${cornerBorderColor}`,
           borderBottom: `${cornerBorderWidth}px solid ${cornerBorderColor}`,
@@ -84,7 +84,7 @@ const ModernHeroBanner: React.FC<ModernHeroBannerProps> = ({
       />
       {/* Bottom Right Corner */}
       <div 
-        className="absolute -bottom-1 -right-1 sm:-bottom-2 sm:-right-2 w-4 h-4 sm:w-6 sm:h-6 z-20 pointer-events-none"
+        className="absolute -bottom-2 -right-2 sm:-bottom-3 sm:-right-3 w-5 h-5 sm:w-8 sm:h-8 z-20 pointer-events-none"
         style={{ 
           borderRight: `${cornerBorderWidth}px solid ${cornerBorderColor}`,
           borderBottom: `${cornerBorderWidth}px solid ${cornerBorderColor}`,
@@ -140,11 +140,11 @@ const ModernHeroBanner: React.FC<ModernHeroBannerProps> = ({
           <CarouselContent className="-ml-0">
             {allImages.map((image, index) => (
               <CarouselItem key={index} className="pl-0">
-                <div className="w-full h-[120px] sm:h-[180px] relative">
+                <div className="w-full h-[180px] sm:h-[280px] md:h-[320px] relative">
                   <img 
                     src={image} 
                     alt={`Banner ${index + 1}`}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover object-center"
                   />
                 </div>
               </CarouselItem>
