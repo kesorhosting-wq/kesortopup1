@@ -144,7 +144,7 @@ const ModernHeroBanner: React.FC<ModernHeroBannerProps> = ({
                   <img 
                     src={image} 
                     alt={`Banner ${index + 1}`}
-                    className="w-full h-auto block"
+                    className="w-full h-auto block max-h-[150px] sm:max-h-[200px] object-contain"
                   />
                 </div>
               </CarouselItem>
