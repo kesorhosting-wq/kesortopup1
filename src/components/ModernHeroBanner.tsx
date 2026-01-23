@@ -49,21 +49,8 @@ const ModernHeroBanner: React.FC<ModernHeroBannerProps> = ({
   const hasImages = allImages.length > 0;
   const hasMultipleImages = allImages.length > 1;
 
-  // Calculate responsive height - compact banner
-  const getResponsiveHeight = () => {
-    if (typeof window !== 'undefined' && window.innerWidth < 640) {
-      return 120; // Compact on mobile
-    }
-    return 180; // Compact on desktop
-  };
-
-  const [height, setHeight] = useState(getResponsiveHeight());
-
-  useEffect(() => {
-    const handleResize = () => setHeight(getResponsiveHeight());
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, [bannerHeight]);
+  // Use aspect ratio for proper image sizing (similar to kesortopup.cam ~3:1 ratio)
+  const aspectRatio = "3/1";
 
   // Corner border styles
   const cornerStyle = {
@@ -113,7 +100,10 @@ const ModernHeroBanner: React.FC<ModernHeroBannerProps> = ({
     return (
       <div className="relative w-full overflow-visible p-2">
         <CornerBorders />
-        <div className="relative w-full overflow-hidden rounded-lg shadow-lg bg-gradient-to-br from-gold/20 via-cream to-gold-light/20" style={{ height: `${height}px` }}>
+        <div 
+          className="relative w-full overflow-hidden rounded-lg shadow-lg bg-gradient-to-br from-gold/20 via-cream to-gold-light/20"
+          style={{ aspectRatio }}
+        >
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-center px-4">
               <h1 className="font-display text-2xl sm:text-4xl font-bold gold-text mb-2">
@@ -134,60 +124,57 @@ const ModernHeroBanner: React.FC<ModernHeroBannerProps> = ({
       {/* Corner Borders - OUTSIDE */}
       <CornerBorders />
       
-      <div className="relative w-full overflow-hidden group rounded-lg shadow-lg" style={{ height: `${height}px` }}>
-      <Carousel
-        setApi={setApi}
-        opts={{
-          loop: true,
-          align: 'start',
-        }}
-        plugins={hasMultipleImages ? [
-          Autoplay({
-            delay: autoplayDelay,
-            stopOnInteraction: false,
-            stopOnMouseEnter: true,
-          }),
-        ] : []}
-        className="w-full h-full"
+      <div 
+        className="relative w-full overflow-hidden group rounded-lg shadow-lg"
+        style={{ aspectRatio }}
       >
-        <CarouselContent className="h-full -ml-0">
-          {allImages.map((image, index) => (
-            <CarouselItem key={index} className="h-full pl-0">
-              <div 
-                className="w-full h-full relative"
-                style={{ height: `${height}px` }}
-              >
-                <img 
-                  src={image} 
-                  alt={`Banner ${index + 1}`}
-                  className="w-full h-full object-contain"
-                />
-                {/* Overlay gradient for better text readability */}
-                <div className="absolute inset-0 bg-gradient-to-t from-background/50 via-transparent to-transparent" />
-              </div>
-            </CarouselItem>
-          ))}
-        </CarouselContent>
-
-
-        {/* Modern dots indicator */}
-        {hasMultipleImages && (
-          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
-            {allImages.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => api?.scrollTo(index)}
-                className={`transition-all duration-300 rounded-full ${
-                  current === index 
-                    ? 'w-6 h-1.5 bg-gold' 
-                    : 'w-1.5 h-1.5 bg-background/60 hover:bg-background/80'
-                }`}
-                aria-label={`Go to slide ${index + 1}`}
-              />
+        <Carousel
+          setApi={setApi}
+          opts={{
+            loop: true,
+            align: 'start',
+          }}
+          plugins={hasMultipleImages ? [
+            Autoplay({
+              delay: autoplayDelay,
+              stopOnInteraction: false,
+              stopOnMouseEnter: true,
+            }),
+          ] : []}
+          className="w-full h-full"
+        >
+          <CarouselContent className="h-full -ml-0">
+            {allImages.map((image, index) => (
+              <CarouselItem key={index} className="h-full pl-0">
+                <div className="w-full h-full relative">
+                  <img 
+                    src={image} 
+                    alt={`Banner ${index + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              </CarouselItem>
             ))}
-          </div>
-        )}
-      </Carousel>
+          </CarouselContent>
+
+          {/* Modern dots indicator */}
+          {hasMultipleImages && (
+            <div className="absolute bottom-2 sm:bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
+              {allImages.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => api?.scrollTo(index)}
+                  className={`transition-all duration-300 rounded-full ${
+                    current === index 
+                      ? 'w-5 sm:w-6 h-1.5 bg-gold' 
+                      : 'w-1.5 h-1.5 bg-background/60 hover:bg-background/80'
+                  }`}
+                  aria-label={`Go to slide ${index + 1}`}
+                />
+              ))}
+            </div>
+          )}
+        </Carousel>
       </div>
     </div>
   );
