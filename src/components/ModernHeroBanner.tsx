@@ -14,6 +14,7 @@ interface ModernHeroBannerProps {
   autoplayDelay?: number;
   cornerBorderColor?: string;
   cornerBorderWidth?: number;
+  imageFit?: 'contain' | 'cover';
 }
 
 const ModernHeroBanner: React.FC<ModernHeroBannerProps> = ({ 
@@ -22,7 +23,8 @@ const ModernHeroBanner: React.FC<ModernHeroBannerProps> = ({
   bannerHeight = 200,
   autoplayDelay = 5000,
   cornerBorderColor = '#D4A84B',
-  cornerBorderWidth = 3
+  cornerBorderWidth = 3,
+  imageFit = 'contain'
 }) => {
   const [api, setApi] = useState<CarouselApi>();
   const [current, setCurrent] = useState(0);
@@ -141,11 +143,14 @@ const ModernHeroBanner: React.FC<ModernHeroBannerProps> = ({
           <CarouselContent className="-ml-0">
             {allImages.map((image, index) => (
               <CarouselItem key={index} className="pl-0">
-                <div className="w-full relative">
+                <div 
+                  className="w-full relative"
+                  style={imageFit === 'cover' ? { height: `${bannerHeight}px` } : undefined}
+                >
                   <img 
                     src={image} 
                     alt={`Banner ${index + 1}`}
-                    className="w-full h-auto block"
+                    className={`w-full block ${imageFit === 'cover' ? 'h-full object-cover object-center' : 'h-auto'}`}
                   />
                 </div>
               </CarouselItem>

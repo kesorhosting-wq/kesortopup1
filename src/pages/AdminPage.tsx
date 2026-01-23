@@ -644,6 +644,32 @@ const AdminPage: React.FC = () => {
                       onChange={(urls) => handleUpdateSettings('bannerImages', urls)}
                       folder="banners"
                     />
+                    <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                      <div>
+                        <label className="text-sm font-medium">Image Display Mode</label>
+                        <p className="text-xs text-muted-foreground">
+                          {settings.bannerImageFit === 'contain' ? 'Show full image (may have empty space)' : 'Fill container (may crop image)'}
+                        </p>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant={settings.bannerImageFit === 'contain' ? 'default' : 'outline'}
+                          onClick={() => handleUpdateSettings('bannerImageFit', 'contain')}
+                          className={settings.bannerImageFit === 'contain' ? 'bg-gold hover:bg-gold/90' : ''}
+                        >
+                          Full Image
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant={settings.bannerImageFit === 'cover' ? 'default' : 'outline'}
+                          onClick={() => handleUpdateSettings('bannerImageFit', 'cover')}
+                          className={settings.bannerImageFit === 'cover' ? 'bg-gold hover:bg-gold/90' : ''}
+                        >
+                          Fill Container
+                        </Button>
+                      </div>
+                    </div>
                     <div>
                       <label className="text-sm font-medium mb-2 block">Banner Height: {settings.bannerHeight || 256}px</label>
                       <input

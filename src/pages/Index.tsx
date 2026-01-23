@@ -45,6 +45,7 @@ const Index: React.FC = () => {
             bannerHeight={settings.bannerHeight}
             cornerBorderColor={settings.frameColor}
             cornerBorderWidth={settings.frameBorderWidth}
+            imageFit={settings.bannerImageFit}
           />
         </div>
         
