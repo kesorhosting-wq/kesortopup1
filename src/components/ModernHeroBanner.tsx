@@ -19,10 +19,10 @@ interface ModernHeroBannerProps {
 const ModernHeroBanner: React.FC<ModernHeroBannerProps> = ({ 
   bannerImage, 
   bannerImages = [],
-  bannerHeight = 400,
+  bannerHeight = 200,
   autoplayDelay = 5000,
   cornerBorderColor = '#D4A84B',
-  cornerBorderWidth = 4
+  cornerBorderWidth = 3
 }) => {
   const [api, setApi] = useState<CarouselApi>();
   const [current, setCurrent] = useState(0);
@@ -49,12 +49,12 @@ const ModernHeroBanner: React.FC<ModernHeroBannerProps> = ({
   const hasImages = allImages.length > 0;
   const hasMultipleImages = allImages.length > 1;
 
-  // Calculate responsive height
+  // Calculate responsive height - more compact
   const getResponsiveHeight = () => {
     if (typeof window !== 'undefined' && window.innerWidth < 640) {
-      return Math.min(bannerHeight * 0.6, 240);
+      return Math.min(bannerHeight * 0.7, 160);
     }
-    return bannerHeight;
+    return Math.min(bannerHeight, 280);
   };
 
   const [height, setHeight] = useState(getResponsiveHeight());
@@ -73,9 +73,9 @@ const ModernHeroBanner: React.FC<ModernHeroBannerProps> = ({
 
   const CornerBorders = () => (
     <>
-      {/* Top Left Corner */}
+      {/* Top Left Corner - OUTSIDE the container */}
       <div 
-        className="absolute top-2 left-2 sm:top-3 sm:left-3 w-6 h-6 sm:w-10 sm:h-10 z-20 pointer-events-none"
+        className="absolute -top-1 -left-1 sm:-top-2 sm:-left-2 w-4 h-4 sm:w-6 sm:h-6 z-20 pointer-events-none"
         style={{ 
           borderLeft: `${cornerBorderWidth}px solid ${cornerBorderColor}`,
           borderTop: `${cornerBorderWidth}px solid ${cornerBorderColor}`,
@@ -83,7 +83,7 @@ const ModernHeroBanner: React.FC<ModernHeroBannerProps> = ({
       />
       {/* Top Right Corner */}
       <div 
-        className="absolute top-2 right-2 sm:top-3 sm:right-3 w-6 h-6 sm:w-10 sm:h-10 z-20 pointer-events-none"
+        className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 w-4 h-4 sm:w-6 sm:h-6 z-20 pointer-events-none"
         style={{ 
           borderRight: `${cornerBorderWidth}px solid ${cornerBorderColor}`,
           borderTop: `${cornerBorderWidth}px solid ${cornerBorderColor}`,
@@ -91,7 +91,7 @@ const ModernHeroBanner: React.FC<ModernHeroBannerProps> = ({
       />
       {/* Bottom Left Corner */}
       <div 
-        className="absolute bottom-2 left-2 sm:bottom-3 sm:left-3 w-6 h-6 sm:w-10 sm:h-10 z-20 pointer-events-none"
+        className="absolute -bottom-1 -left-1 sm:-bottom-2 sm:-left-2 w-4 h-4 sm:w-6 sm:h-6 z-20 pointer-events-none"
         style={{ 
           borderLeft: `${cornerBorderWidth}px solid ${cornerBorderColor}`,
           borderBottom: `${cornerBorderWidth}px solid ${cornerBorderColor}`,
@@ -99,7 +99,7 @@ const ModernHeroBanner: React.FC<ModernHeroBannerProps> = ({
       />
       {/* Bottom Right Corner */}
       <div 
-        className="absolute bottom-2 right-2 sm:bottom-3 sm:right-3 w-6 h-6 sm:w-10 sm:h-10 z-20 pointer-events-none"
+        className="absolute -bottom-1 -right-1 sm:-bottom-2 sm:-right-2 w-4 h-4 sm:w-6 sm:h-6 z-20 pointer-events-none"
         style={{ 
           borderRight: `${cornerBorderWidth}px solid ${cornerBorderColor}`,
           borderBottom: `${cornerBorderWidth}px solid ${cornerBorderColor}`,
@@ -111,31 +111,30 @@ const ModernHeroBanner: React.FC<ModernHeroBannerProps> = ({
   if (!hasImages) {
     // Placeholder hero when no images
     return (
-      <div className="relative w-full overflow-hidden rounded-xl sm:rounded-2xl shadow-lg" style={{ height: `${height}px` }}>
-        <div className="absolute inset-0 bg-gradient-to-br from-gold/20 via-cream to-gold-light/20 rounded-xl sm:rounded-2xl" />
+      <div className="relative w-full overflow-visible p-2">
         <CornerBorders />
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="text-center px-4">
-            <h1 className="font-display text-3xl sm:text-5xl font-bold gold-text mb-4">
-              Welcome to Top Up
-            </h1>
-            <p className="text-muted-foreground text-lg">
-              Fast & Secure Game Top Up Service
-            </p>
+        <div className="relative w-full overflow-hidden rounded-lg shadow-lg bg-gradient-to-br from-gold/20 via-cream to-gold-light/20" style={{ height: `${height}px` }}>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="text-center px-4">
+              <h1 className="font-display text-2xl sm:text-4xl font-bold gold-text mb-2">
+                Welcome to Top Up
+              </h1>
+              <p className="text-muted-foreground text-sm sm:text-base">
+                Fast & Secure Game Top Up Service
+              </p>
+            </div>
           </div>
         </div>
-        {/* Decorative elements */}
-        <div className="absolute top-10 left-10 w-20 h-20 bg-gold/10 rounded-full blur-2xl" />
-        <div className="absolute bottom-10 right-10 w-32 h-32 bg-gold/10 rounded-full blur-3xl" />
       </div>
     );
   }
 
   return (
-    <div className="relative w-full overflow-hidden group rounded-xl sm:rounded-2xl shadow-lg" style={{ height: `${height}px` }}>
-      {/* Corner Borders */}
+    <div className="relative w-full overflow-visible p-2">
+      {/* Corner Borders - OUTSIDE */}
       <CornerBorders />
       
+      <div className="relative w-full overflow-hidden group rounded-lg shadow-lg" style={{ height: `${height}px` }}>
       <Carousel
         setApi={setApi}
         opts={{
@@ -173,15 +172,15 @@ const ModernHeroBanner: React.FC<ModernHeroBannerProps> = ({
 
         {/* Modern dots indicator */}
         {hasMultipleImages && (
-          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
             {allImages.map((_, index) => (
               <button
                 key={index}
                 onClick={() => api?.scrollTo(index)}
                 className={`transition-all duration-300 rounded-full ${
                   current === index 
-                    ? 'w-8 h-2 bg-gold' 
-                    : 'w-2 h-2 bg-background/60 hover:bg-background/80'
+                    ? 'w-6 h-1.5 bg-gold' 
+                    : 'w-1.5 h-1.5 bg-background/60 hover:bg-background/80'
                 }`}
                 aria-label={`Go to slide ${index + 1}`}
               />
@@ -189,6 +188,7 @@ const ModernHeroBanner: React.FC<ModernHeroBannerProps> = ({
           </div>
         )}
       </Carousel>
+      </div>
     </div>
   );
 };
