@@ -78,6 +78,7 @@ export interface SiteSettings {
   bannerImage: string;
   bannerImages: string[];
   bannerHeight: number;
+  bannerImageFit: 'contain' | 'cover';
   gameCardBgColor: string;
   gameCardBorderColor: string;
   gameCardFrameImage: string;
@@ -184,6 +185,7 @@ const defaultSettings: SiteSettings = {
   bannerImage: '',
   bannerImages: [],
   bannerHeight: 256,
+  bannerImageFit: 'contain',
   gameCardBgColor: '',
   gameCardBorderColor: '',
   gameCardFrameImage: '',
@@ -320,6 +322,7 @@ export const SiteProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           if (row.key === 'bannerImage') loadedSettings.bannerImage = row.value as string;
           if (row.key === 'bannerImages') loadedSettings.bannerImages = row.value as string[];
           if (row.key === 'bannerHeight') loadedSettings.bannerHeight = row.value as number;
+          if (row.key === 'bannerImageFit') loadedSettings.bannerImageFit = row.value as 'contain' | 'cover';
           if (row.key === 'gameCardBgColor') loadedSettings.gameCardBgColor = row.value as string;
           if (row.key === 'gameCardBorderColor') loadedSettings.gameCardBorderColor = row.value as string;
           if (row.key === 'gameCardFrameImage') loadedSettings.gameCardFrameImage = row.value as string;
