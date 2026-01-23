@@ -140,7 +140,7 @@ const ModernHeroBanner: React.FC<ModernHeroBannerProps> = ({
           <CarouselContent className="-ml-0">
             {allImages.map((image, index) => (
               <CarouselItem key={index} className="pl-0">
-                <div className="w-full h-[180px] sm:h-[280px] md:h-[320px] relative">
+                <div className="w-full h-[140px] sm:h-[200px] relative">
                   <img 
                     src={image} 
                     alt={`Banner ${index + 1}`}
