@@ -97,6 +97,7 @@ export type Database = {
       }
       game_verification_configs: {
         Row: {
+          alternate_api_codes: string[]
           api_code: string
           api_provider: string
           created_at: string
@@ -108,6 +109,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          alternate_api_codes?: string[]
           api_code: string
           api_provider?: string
           created_at?: string
@@ -119,6 +121,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          alternate_api_codes?: string[]
           api_code?: string
           api_provider?: string
           created_at?: string
