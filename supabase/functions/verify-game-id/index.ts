@@ -6,6 +6,9 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// G2Bulk API base
+const G2BULK_API_URL = 'https://api.g2bulk.com/v1';
+
 // Structured logging helper
 function log(level: 'INFO' | 'WARN' | 'ERROR' | 'DEBUG', message: string, data?: Record<string, unknown>) {
   const entry = {
@@ -30,6 +33,7 @@ interface GameVerificationConfig {
   api_provider: string;
   requires_zone: boolean;
   default_zone: string | null;
+  alternate_api_codes: string[];
 }
 
 // Cache for game configs (refreshed every 5 minutes)
@@ -39,48 +43,56 @@ const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 async function getGameConfigs(): Promise<Map<string, GameVerificationConfig>> {
   const now = Date.now();
-  
+
   // Return cached configs if still valid
   if (configCache && (now - cacheTimestamp) < CACHE_TTL) {
     return configCache;
   }
-  
+
   // Fetch from database
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
   const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
   const supabase = createClient(supabaseUrl, supabaseKey);
-  
+
   const { data, error } = await supabase
     .from('game_verification_configs')
-    .select('game_name, api_code, api_provider, requires_zone, default_zone')
+    .select('game_name, api_code, api_provider, requires_zone, default_zone, alternate_api_codes')
     .eq('is_active', true);
-  
+
   if (error) {
     log('ERROR', 'Failed to fetch game configs', { error: error.message });
     // Return empty map if fetch fails
     return configCache || new Map();
   }
-  
+
   // Build lookup map (case-insensitive)
   const newCache = new Map<string, GameVerificationConfig>();
   for (const config of data || []) {
+    const cfg: GameVerificationConfig = {
+      game_name: config.game_name,
+      api_code: config.api_code,
+      api_provider: config.api_provider,
+      requires_zone: config.requires_zone,
+      default_zone: config.default_zone,
+      alternate_api_codes: config.alternate_api_codes || [],
+    };
     // Store with original name
-    newCache.set(config.game_name, config);
+    newCache.set(config.game_name, cfg);
     // Also store lowercase version for case-insensitive lookup
-    newCache.set(config.game_name.toLowerCase(), config);
+    newCache.set(config.game_name.toLowerCase(), cfg);
   }
-  
+
   configCache = newCache;
   cacheTimestamp = now;
   log('INFO', 'Loaded game verification configs from database', { count: data?.length || 0 });
-  
+
   return configCache;
 }
 
 // Normalize game names for fuzzy matching
 function normalizeGameName(gameName: string): string {
   const normalized = gameName.toLowerCase().trim();
-  
+
   if (normalized.includes('mobile legends') || normalized === 'mlbb') return 'Mobile Legends';
   if (normalized.includes('magic chess')) return 'Magic Chess';
   if (normalized.includes('free fire') || normalized.includes('freefire') || normalized === 'ff') return 'Free Fire';
@@ -104,43 +116,123 @@ function normalizeGameName(gameName: string): string {
   if (normalized.includes('blue archive')) return 'Blue Archive';
   if (normalized.includes('roblox')) return 'Roblox';
   if (normalized.includes('minecraft')) return 'Minecraft';
-  
+
   return gameName;
 }
 
 // Find game config from database
 async function findGameConfig(gameName: string): Promise<GameVerificationConfig | null> {
   const configs = await getGameConfigs();
-  
+
   // Try exact match first
   let config = configs.get(gameName);
   if (config) return config;
-  
+
   // Try lowercase match
   config = configs.get(gameName.toLowerCase());
   if (config) return config;
-  
+
   // Try normalized name
   const normalized = normalizeGameName(gameName);
   config = configs.get(normalized);
   if (config) return config;
-  
+
   config = configs.get(normalized.toLowerCase());
   if (config) return config;
-  
+
   return null;
+}
+
+// Get G2Bulk API key from api_configurations table
+async function getG2BulkApiKey(): Promise<string | null> {
+  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+  const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+  const supabase = createClient(supabaseUrl, supabaseKey);
+
+  const { data, error } = await supabase
+    .from('api_configurations')
+    .select('api_secret, is_enabled')
+    .eq('api_name', 'g2bulk')
+    .single();
+
+  if (error || !data || !data.is_enabled) {
+    log('WARN', 'G2Bulk API not configured or disabled');
+    return null;
+  }
+
+  return data.api_secret || null;
+}
+
+// Try to verify player via G2Bulk checkPlayerIdPublic endpoint
+async function verifyWithG2Bulk(
+  apiKey: string,
+  gameCode: string,
+  userId: string,
+  serverId?: string
+): Promise<{ success: boolean; name?: string; openid?: string; error?: string }> {
+  const body: Record<string, string> = {
+    game: gameCode,
+    user_id: userId,
+  };
+  if (serverId) {
+    body.server_id = serverId;
+  }
+
+  log('DEBUG', 'Calling G2Bulk checkPlayerIdPublic', { gameCode, userId, hasServerId: !!serverId });
+
+  const response = await fetch(`${G2BULK_API_URL}/games/checkPlayerIdPublic`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-API-Key': apiKey,
+    },
+    body: JSON.stringify(body),
+  });
+
+  const text = await response.text();
+  log('DEBUG', 'G2Bulk checkPlayerIdPublic response', { status: response.status, body: text.substring(0, 500) });
+
+  if (!response.ok) {
+    return { success: false, error: `G2Bulk API returned ${response.status}` };
+  }
+
+  let data: Record<string, unknown>;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    return { success: false, error: 'Invalid JSON from G2Bulk' };
+  }
+
+  // Expected response: { valid: "valid", name: "...", openid: "..." } or { valid: "invalid", ... }
+  if (data.valid === 'valid' && data.name) {
+    return { success: true, name: data.name as string, openid: data.openid as string };
+  }
+
+  // Check for alternate success formats
+  if (data.success === true && (data.name || data.nickname || data.username)) {
+    const name = (data.name || data.nickname || data.username) as string;
+    return { success: true, name, openid: data.openid as string };
+  }
+
+  // Determine error message
+  let errorMsg = 'Player ID not found or invalid';
+  if (data.message) errorMsg = data.message as string;
+  else if (data.error) errorMsg = data.error as string;
+  else if (data.valid === 'invalid') errorMsg = 'Invalid player ID';
+
+  return { success: false, error: errorMsg };
 }
 
 serve(async (req) => {
   const requestId = crypto.randomUUID().slice(0, 8);
-  
+
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
     const { gameName, userId, serverId } = await req.json();
-    
+
     log('INFO', 'Verification request received', { requestId, gameName, userId, serverId: serverId || 'N/A' });
 
     if (!gameName || !userId) {
@@ -151,279 +243,90 @@ serve(async (req) => {
       );
     }
 
-    // Get RapidAPI key
-    const rapidApiKey = Deno.env.get('RAPIDAPI_KEY');
+    // Get G2Bulk API key
+    const apiKey = await getG2BulkApiKey();
+    if (!apiKey) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Game verification service is not configured. Please contact the admin.' }),
+        { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     // Find game config from database
     const gameConfig = await findGameConfig(gameName);
-    log('DEBUG', 'Game config lookup', { requestId, gameName, configFound: !!gameConfig, apiProvider: gameConfig?.api_provider });
+    log('DEBUG', 'Game config lookup', { requestId, gameName, configFound: !!gameConfig, apiCode: gameConfig?.api_code });
 
-    // Handle Roblox games
-    if (gameConfig?.api_provider === 'roblox') {
-      try {
-        console.log(`Using Roblox API for username: ${userId}`);
-        const response = await fetch('https://users.roblox.com/v1/usernames/users', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ usernames: [userId], excludeBannedUsers: true }),
-        });
-        
-        const data = await response.json();
-        console.log('Roblox API response:', JSON.stringify(data));
-        
-        if (data.data && data.data.length > 0) {
-          const user = data.data[0];
-          return new Response(
-            JSON.stringify({
-              success: true,
-              username: user.displayName || user.name,
-              userId: user.id.toString(),
-              accountName: user.name,
-              verifiedBy: 'Roblox',
-            }),
-            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          );
-        } else {
-          return new Response(
-            JSON.stringify({ success: false, error: 'Roblox username not found' }),
-            { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          );
-        }
-      } catch (error) {
-        console.error('Roblox API error:', error);
-        return new Response(
-          JSON.stringify({ success: false, error: 'Failed to verify Roblox account' }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
+    if (!gameConfig) {
+      return new Response(
+        JSON.stringify({ success: false, error: `No verification configuration found for ${gameName}. Please ask admin to sync game codes.` }),
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
-    // Handle Minecraft games
-    if (gameConfig?.api_provider === 'minecraft') {
-      try {
-        console.log(`Using Mojang API for username: ${userId}`);
-        const response = await fetch(`https://api.mojang.com/users/profiles/minecraft/${encodeURIComponent(userId)}`);
-        
-        if (response.status === 200) {
-          const data = await response.json();
-          console.log('Mojang API response:', JSON.stringify(data));
-          return new Response(
-            JSON.stringify({
-              success: true,
-              username: data.name,
-              userId: data.id,
-              accountName: data.name,
-              verifiedBy: 'Minecraft',
-            }),
-            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          );
-        } else if (response.status === 204 || response.status === 404) {
-          return new Response(
-            JSON.stringify({ success: false, error: 'Minecraft username not found' }),
-            { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          );
-        } else {
-          throw new Error(`Mojang API returned status ${response.status}`);
-        }
-      } catch (error) {
-        console.error('Minecraft API error:', error);
-        return new Response(
-          JSON.stringify({ success: false, error: 'Failed to verify Minecraft account' }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
+    // Check if zone is required
+    if (gameConfig.requires_zone && !serverId && !gameConfig.default_zone) {
+      log('WARN', 'Zone required but not provided', { requestId, gameName });
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: `${gameName} requires a Server/Zone ID. Please enter your Server ID.`,
+          requiresServerId: true,
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
-    // Handle RapidAPI games
-    if (gameConfig?.api_provider === 'rapidapi' && rapidApiKey) {
-      // Check if this game requires Zone ID from user
-      if (gameConfig.requires_zone && !serverId) {
-        console.log(`Game "${gameName}" requires Zone/Server ID but none provided`);
+    const effectiveServerId = serverId || gameConfig.default_zone || undefined;
+
+    // Build list of game codes to try (primary + alternates)
+    const codesToTry = [gameConfig.api_code, ...gameConfig.alternate_api_codes];
+    const triedCodes: string[] = [];
+    let lastError = 'Verification failed';
+
+    for (const code of codesToTry) {
+      triedCodes.push(code);
+      const result = await verifyWithG2Bulk(apiKey, code, userId, effectiveServerId);
+
+      if (result.success && result.name) {
+        log('INFO', 'Verification successful', { requestId, gameName, code, name: result.name });
         return new Response(
-          JSON.stringify({ 
-            success: false, 
-            error: `${gameName} requires a Server/Zone ID. Please enter your Server ID.`,
-            requiresServerId: true
+          JSON.stringify({
+            success: true,
+            username: result.name,
+            userId: userId,
+            serverId: effectiveServerId || undefined,
+            accountName: result.name,
+            verifiedBy: 'G2Bulk',
           }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
 
-      try {
-        // Build RapidAPI URL: /api/game/{game-code}?id={userId}&zone={serverId}
-        let apiUrl = `https://check-id-game1.p.rapidapi.com/api/game/${gameConfig.api_code}?id=${encodeURIComponent(userId)}`;
-        
-        // Add zone parameter - either from user input or default
-        const zoneValue = serverId || gameConfig.default_zone;
-        if (zoneValue) {
-          apiUrl += `&zone=${encodeURIComponent(zoneValue)}`;
-        }
-        
-        console.log(`Calling RapidAPI: ${apiUrl}`);
-        
-        const response = await fetch(apiUrl, {
-          method: 'GET',
-          headers: {
-            'x-rapidapi-key': rapidApiKey,
-            'x-rapidapi-host': 'check-id-game1.p.rapidapi.com',
-          },
-        });
-        
-        const responseText = await response.text();
-        console.log('RapidAPI raw response:', responseText, 'Status:', response.status);
-        
-        let data;
-        try {
-          data = JSON.parse(responseText);
-        } catch (parseError) {
-          console.error('Failed to parse RapidAPI response:', parseError);
-          throw new Error('Invalid response from RapidAPI');
-        }
-        
-        // Parse response - check various formats
-        if (data.success === true || data.status === true || data.data) {
-          const responseData = data.data || data;
-          const nickname = responseData.nickname || responseData.username || responseData.name || 
-                          responseData.game_name || responseData.player_name || responseData.ign;
-          
-          if (nickname) {
-            return new Response(
-              JSON.stringify({
-                success: true,
-                username: nickname,
-                userId: userId,
-                serverId: serverId || undefined,
-                accountName: nickname,
-                verifiedBy: 'RapidAPI',
-              }),
-              { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-            );
-          }
-        }
-        
-        // Check if response has error
-        if (data.success === false || data.status === false) {
-          const errorMsg = data.message || data.error || data.msg || 'Account not found';
-          console.log(`RapidAPI returned error: ${errorMsg}`);
-          
-          // If it's a "zone required" error, try with a default zone
-          if (errorMsg.toLowerCase().includes('zone') && !serverId && !gameConfig.default_zone) {
-            console.log('Retrying with default zone...');
-            const retryUrl = `${apiUrl}&zone=1`;
-            const retryResponse = await fetch(retryUrl, {
-              method: 'GET',
-              headers: {
-                'x-rapidapi-key': rapidApiKey,
-                'x-rapidapi-host': 'check-id-game1.p.rapidapi.com',
-              },
-            });
-            const retryData = await retryResponse.json();
-            console.log('RapidAPI retry response:', JSON.stringify(retryData));
-            
-            if (retryData.success === true || retryData.status === true || retryData.data) {
-              const retryResponseData = retryData.data || retryData;
-              const retryNickname = retryResponseData.nickname || retryResponseData.username || retryResponseData.name || 
-                              retryResponseData.game_name || retryResponseData.player_name || retryResponseData.ign;
-              
-              if (retryNickname) {
-                return new Response(
-                  JSON.stringify({
-                    success: true,
-                    username: retryNickname,
-                    userId: userId,
-                    serverId: serverId || undefined,
-                    accountName: retryNickname,
-                    verifiedBy: 'RapidAPI',
-                  }),
-                  { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-                );
-              }
-            }
-          }
-          
-          return new Response(
-            JSON.stringify({ success: false, error: errorMsg }),
-            { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          );
-        }
-        
-        // Unknown response format - continue to fallback providers
-        console.log('RapidAPI unknown response format; continuing to fallback providers');
-        throw new Error(data?.message || 'RapidAPI unknown response format');
-        
-      } catch (error) {
-        console.error('RapidAPI error:', error);
-        // Fallback: try free API
-      }
+      lastError = result.error || 'Player ID not found';
+      log('DEBUG', 'Code failed, trying next', { requestId, code, error: lastError });
     }
 
-    // Fallback: Try free api-cek-id-game for supported games
-    const FREE_API_MAP: Record<string, string> = {
-      'Mobile Legends': 'mobile_legends',
-      'Magic Chess': 'mobile_legends',
-      'Free Fire': 'free_fire',
-      'Arena of Valor': 'arena_of_valor',
-      'Call of Duty': 'call_of_duty',
-      'Call of Duty Mobile': 'call_of_duty',
-      'Valorant': 'valorant',
-      'Point Blank': 'point_blank',
-      'Hago': 'hago',
-      '8 Ball Pool': 'eight_ball_pool',
-    };
-    
-    const normalizedName = normalizeGameName(gameName);
-    const freeGameType = FREE_API_MAP[gameName] || FREE_API_MAP[normalizedName];
-    
-    if (freeGameType) {
-      try {
-        let apiUrl = `https://api-cek-id-game-ten.vercel.app/api/check-id-game?type_name=${freeGameType}&userId=${userId}`;
-        if (serverId) apiUrl += `&zoneId=${serverId}`;
-        
-        console.log(`Trying free API: ${apiUrl}`);
-        
-        const response = await fetch(apiUrl, {
-          method: 'GET',
-          headers: { 'Accept': 'application/json' },
-        });
-        
-        const data = await response.json();
-        console.log('Free API response:', JSON.stringify(data));
-        
-        if (data.status === true || data.success === true) {
-          const nickname = data.nickname || data.username || data.name;
-          if (nickname) {
-            return new Response(
-              JSON.stringify({
-                success: true,
-                username: nickname,
-                userId: userId,
-                serverId: serverId || undefined,
-                accountName: nickname,
-                verifiedBy: 'FreeAPI',
-              }),
-              { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-            );
-          }
-        }
-      } catch (error) {
-        console.error('Free API error:', error);
-      }
-    }
+    // All codes failed – suggest trying alternate region
+    log('WARN', 'All verification codes failed', { requestId, gameName, triedCodes });
 
-    // No API available or all failed
-    console.log(`No API available for "${gameName}"`);
+    const alternateHint = gameConfig.alternate_api_codes.length > 0
+      ? ` You may be registered in a different region. Try selecting another region.`
+      : '';
+
     return new Response(
       JSON.stringify({
         success: false,
-        error: `Automatic verification is currently unavailable for ${gameName}. Please try again later.`,
+        error: `${lastError}${alternateHint}`,
+        triedCodes,
+        alternateRegions: gameConfig.alternate_api_codes,
       }),
-      { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error) {
-    console.error('Verification error:', error);
+    log('ERROR', 'Verification error', { error: String(error) });
     return new Response(
-      JSON.stringify({ success: false, error: 'Internal server error' }),
+      JSON.stringify({ success: false, error: 'Verification service error. Please try again later.' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

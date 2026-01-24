@@ -25,6 +25,7 @@ interface VerifiedUser {
 interface GameVerificationConfig {
   requires_zone: boolean;
   default_zone: string | null;
+  alternate_api_codes: string[];
 }
 
 const TopupPage: React.FC = () => {
@@ -57,6 +58,8 @@ const TopupPage: React.FC = () => {
   const [isVerifying, setIsVerifying] = useState(false);
   const [verifiedUser, setVerifiedUser] = useState<VerifiedUser | null>(null);
   const [verificationError, setVerificationError] = useState<string | null>(null);
+  const [alternateRegions, setAlternateRegions] = useState<string[]>([]);
+  const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
   
   // Fetch game verification config from database
   useEffect(() => {
@@ -67,7 +70,7 @@ const TopupPage: React.FC = () => {
         // Try exact match first, then fuzzy match
         let { data, error } = await supabase
           .from('game_verification_configs')
-          .select('requires_zone, default_zone')
+          .select('requires_zone, default_zone, alternate_api_codes')
           .eq('is_active', true)
           .ilike('game_name', game.name)
           .maybeSingle();
@@ -76,7 +79,7 @@ const TopupPage: React.FC = () => {
         if (!data) {
           const result = await supabase
             .from('game_verification_configs')
-            .select('requires_zone, default_zone, game_name')
+            .select('requires_zone, default_zone, alternate_api_codes, game_name')
             .eq('is_active', true)
             .ilike('game_name', `%${game.name.split(' ')[0]}%`)
             .limit(10);
@@ -96,15 +99,19 @@ const TopupPage: React.FC = () => {
         
         if (data) {
           console.log(`[TopupPage] Loaded config for "${game.name}": requires_zone=${data.requires_zone}`);
-          setGameVerificationConfig({ requires_zone: data.requires_zone, default_zone: data.default_zone });
+          setGameVerificationConfig({
+            requires_zone: data.requires_zone,
+            default_zone: data.default_zone,
+            alternate_api_codes: data.alternate_api_codes || [],
+          });
         } else {
           // Default: no zone required
           console.log(`[TopupPage] No config found for "${game.name}", defaulting to no zone`);
-          setGameVerificationConfig({ requires_zone: false, default_zone: null });
+          setGameVerificationConfig({ requires_zone: false, default_zone: null, alternate_api_codes: [] });
         }
       } catch (error) {
         console.error('Failed to fetch verification config:', error);
-        setGameVerificationConfig({ requires_zone: false, default_zone: null });
+        setGameVerificationConfig({ requires_zone: false, default_zone: null, alternate_api_codes: [] });
       }
     };
     
@@ -272,8 +279,8 @@ const TopupPage: React.FC = () => {
   const gameIdConfig = game ? getGameIdConfig(game.name) : null;
   const hasMultipleFields = gameIdConfig && gameIdConfig.fields.length > 1;
 
-  // Handle ID verification using real API
-  const handleVerify = async () => {
+  // Handle ID verification using G2Bulk API
+  const handleVerify = async (overrideRegion?: string) => {
     if (!userId.trim()) {
       toast({ title: gameIdConfig?.validation || "សូមបញ្ចូល Game ID", variant: "destructive" });
       return;
@@ -293,6 +300,7 @@ const TopupPage: React.FC = () => {
     setIsVerifying(true);
     setVerificationError(null);
     setVerifiedUser(null);
+    setAlternateRegions([]);
 
     try {
       const { data, error } = await supabase.functions.invoke('verify-game-id', {
@@ -300,6 +308,7 @@ const TopupPage: React.FC = () => {
           gameName: game?.name,
           userId: userId.trim(),
           serverId: serverId.trim() || undefined,
+          regionOverride: overrideRegion || selectedRegion || undefined,
         },
       });
 
@@ -314,6 +323,10 @@ const TopupPage: React.FC = () => {
           try {
             const body = await anyErr.context.json();
             msg = body?.error || body?.message || msg;
+            // Check if alternate regions are available
+            if (body?.alternateRegions && Array.isArray(body.alternateRegions)) {
+              setAlternateRegions(body.alternateRegions);
+            }
           } catch {
             // ignore JSON parse failures
           }
@@ -353,6 +366,12 @@ const TopupPage: React.FC = () => {
       } else {
         const errorMsg = data?.error || 'មិនអាចផ្ទៀងផ្ទាត់ ID បានទេ។';
         setVerificationError(errorMsg);
+        
+        // Check if alternate regions are available
+        if (data?.alternateRegions && Array.isArray(data.alternateRegions) && data.alternateRegions.length > 0) {
+          setAlternateRegions(data.alternateRegions);
+        }
+        
         toast({
           title: "ផ្ទៀងផ្ទាត់បរាជ័យ",
           description: errorMsg,
@@ -373,17 +392,27 @@ const TopupPage: React.FC = () => {
     }
   };
 
+  // Handle trying a different region
+  const handleTryRegion = (regionCode: string) => {
+    setSelectedRegion(regionCode);
+    handleVerify(regionCode);
+  };
+
   // Reset verification when ID changes
   const handleUserIdChange = (value: string) => {
     setUserId(value);
     setVerifiedUser(null);
     setVerificationError(null);
+    setAlternateRegions([]);
+    setSelectedRegion(null);
   };
 
   const handleServerIdChange = (value: string) => {
     setServerId(value);
     setVerifiedUser(null);
     setVerificationError(null);
+    setAlternateRegions([]);
+    setSelectedRegion(null);
   };
 
   // Render dynamic ID input fields based on game
@@ -728,6 +757,30 @@ const TopupPage: React.FC = () => {
                     <div className="flex-1 min-w-0">
                       <h3 className="text-red-400 font-bold text-sm sm:text-base mb-1">ផ្ទៀងផ្ទាត់បរាជ័យ</h3>
                       <p className="text-red-300/80 text-xs sm:text-sm break-words">{verificationError}</p>
+                      
+                      {/* Region Switcher - Show when alternate regions are available */}
+                      {alternateRegions.length > 0 && (
+                        <div className="mt-3 pt-3 border-t border-red-500/20">
+                          <p className="text-xs text-amber-300/80 mb-2 flex items-center gap-1">
+                            <AlertCircle className="w-3 h-3" />
+                            Try a different region:
+                          </p>
+                          <div className="flex flex-wrap gap-2">
+                            {alternateRegions.map((region) => (
+                              <Button
+                                key={region}
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleTryRegion(region)}
+                                disabled={isVerifying}
+                                className="h-7 text-xs border-amber-500/50 text-amber-300 hover:bg-amber-500/20 hover:border-amber-400"
+                              >
+                                {region.toUpperCase().replace(/-/g, ' ')}
+                              </Button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -743,7 +796,7 @@ const TopupPage: React.FC = () => {
             {/* Verify Button */}
             <div className="flex justify-center mt-6 relative">
               <Button 
-                onClick={handleVerify}
+                onClick={() => handleVerify()}
                 disabled={isVerifying || !userId.trim() || !!verifiedUser}
                 className={cn(
                   "rounded-xl px-8 py-3 h-auto flex items-center gap-2 font-bold transition-all",
