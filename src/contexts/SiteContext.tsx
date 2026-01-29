@@ -134,6 +134,9 @@ export interface SiteSettings {
   // Games section settings
   gamesSectionBgColor: string;
   gamesSectionBgImage: string;
+  // Custom font settings
+  customFontKhmer: string;
+  customFontEnglish: string;
 }
 
 interface SiteContextType {
@@ -241,6 +244,9 @@ const defaultSettings: SiteSettings = {
   // Games section defaults
   gamesSectionBgColor: '',
   gamesSectionBgImage: '',
+  // Custom font defaults
+  customFontKhmer: '',
+  customFontEnglish: '',
 };
 
 const SiteContext = createContext<SiteContextType | undefined>(undefined);
@@ -373,6 +379,8 @@ export const SiteProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           if (row.key === 'paymentSectionTextColor') loadedSettings.paymentSectionTextColor = row.value as string;
           if (row.key === 'gamesSectionBgColor') loadedSettings.gamesSectionBgColor = row.value as string;
           if (row.key === 'gamesSectionBgImage') loadedSettings.gamesSectionBgImage = row.value as string;
+          if (row.key === 'customFontKhmer') loadedSettings.customFontKhmer = row.value as string;
+          if (row.key === 'customFontEnglish') loadedSettings.customFontEnglish = row.value as string;
           // Payment methods are now static (ABA, Wing, KHQR), skip loading from site_settings
           if (row.key === 'siteIcon') loadedSettings.siteIcon = row.value as string;
           if (row.key === 'browserTitle') loadedSettings.browserTitle = row.value as string;

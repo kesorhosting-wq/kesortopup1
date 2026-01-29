@@ -33,6 +33,7 @@ import AppStoreImageSync, { AppStoreBulkSync } from '@/components/admin/AppStore
 import { useG2BulkProductStatus } from '@/hooks/useG2BulkProductStatus';
 import { AdminWalletTab } from '@/components/admin/AdminWalletTab';
 import DataExportTab from '@/components/admin/DataExportTab';
+import FontUploadSettings from '@/components/admin/FontUploadSettings';
 
 const AdminPage: React.FC = () => {
   const { user, signOut } = useAuth();
@@ -547,6 +548,13 @@ const AdminPage: React.FC = () => {
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Font Settings */}
+              <FontUploadSettings
+                customFontKhmer={settings.customFontKhmer}
+                customFontEnglish={settings.customFontEnglish}
+                onUpdate={handleUpdateSettings}
+              />
             </TabsContent>
 
             {/* Home Edit */}

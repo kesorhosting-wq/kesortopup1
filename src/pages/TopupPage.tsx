@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { ArrowLeft, CheckCircle, Loader2, UserCheck, XCircle, Shield, Zap, Sparkles, Wallet, AlertCircle } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Loader2, UserCheck, XCircle, Shield, Zap, Sparkles, Wallet, AlertCircle, Gift } from 'lucide-react';
 import Header from '@/components/Header';
 import ModernPackageCard from '@/components/ModernPackageCard';
 import { Button } from '@/components/ui/button';
@@ -35,12 +35,10 @@ const TopupPage: React.FC = () => {
   const { addToCart } = useCart();
   const { user } = useAuth();
   
-  // Update favicon dynamically
   useFavicon(settings.siteIcon);
   
   const game = games.find(g => g.id === gameId);
   
-  // Auto-load cached game IDs (24h cache)
   const { cachedUserId, cachedServerId, saveToCache, hasCachedData } = useGameIdCache(gameId);
   
   const [userId, setUserId] = useState('');
@@ -51,31 +49,27 @@ const TopupPage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [walletBalance, setWalletBalance] = useState<number>(0);
   
-  // Database config for zone requirement
   const [gameVerificationConfig, setGameVerificationConfig] = useState<GameVerificationConfig | null>(null);
   
-  // Verification states
   const [isVerifying, setIsVerifying] = useState(false);
   const [verifiedUser, setVerifiedUser] = useState<VerifiedUser | null>(null);
   const [verificationError, setVerificationError] = useState<string | null>(null);
   const [alternateRegions, setAlternateRegions] = useState<string[]>([]);
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
   
-  // Fetch game verification config from database
+  // Fetch game verification config
   useEffect(() => {
     const fetchVerificationConfig = async () => {
       if (!game?.name) return;
       
       try {
-        // Try exact match first, then fuzzy match
-        let { data, error } = await supabase
+        let { data } = await supabase
           .from('game_verification_configs')
           .select('requires_zone, default_zone, alternate_api_codes')
           .eq('is_active', true)
           .ilike('game_name', game.name)
           .maybeSingle();
         
-        // If no exact match, try partial match
         if (!data) {
           const result = await supabase
             .from('game_verification_configs')
@@ -85,7 +79,6 @@ const TopupPage: React.FC = () => {
             .limit(10);
           
           if (result.data && result.data.length > 0) {
-            // Find best match
             const exactMatch = result.data.find(
               r => r.game_name.toLowerCase() === game.name.toLowerCase()
             );
@@ -98,15 +91,12 @@ const TopupPage: React.FC = () => {
         }
         
         if (data) {
-          console.log(`[TopupPage] Loaded config for "${game.name}": requires_zone=${data.requires_zone}`);
           setGameVerificationConfig({
             requires_zone: data.requires_zone,
             default_zone: data.default_zone,
             alternate_api_codes: data.alternate_api_codes || [],
           });
         } else {
-          // Default: no zone required
-          console.log(`[TopupPage] No config found for "${game.name}", defaulting to no zone`);
           setGameVerificationConfig({ requires_zone: false, default_zone: null, alternate_api_codes: [] });
         }
       } catch (error) {
@@ -118,7 +108,6 @@ const TopupPage: React.FC = () => {
     fetchVerificationConfig();
   }, [game?.name]);
   
-  // Auto-fill cached IDs when available
   useEffect(() => {
     if (hasCachedData && !userId) {
       setUserId(cachedUserId);
@@ -126,7 +115,6 @@ const TopupPage: React.FC = () => {
     }
   }, [hasCachedData, cachedUserId, cachedServerId]);
 
-  // Fetch wallet balance when user is logged in
   useEffect(() => {
     const fetchWalletBalance = async () => {
       if (!user) return;
@@ -144,7 +132,6 @@ const TopupPage: React.FC = () => {
     fetchWalletBalance();
   }, [user]);
 
-  // Show loading state while data is being fetched
   if (isLoading || (game && gameVerificationConfig === null)) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -164,16 +151,11 @@ const TopupPage: React.FC = () => {
     );
   }
 
-  // Game-specific ID field configurations - uses database config for zone requirement
   const getGameIdConfig = (gameName: string) => {
     const normalizedName = gameName.toLowerCase().trim();
-    
-    // Check database config for zone requirement (this is the source of truth)
     const requiresZone = gameVerificationConfig?.requires_zone ?? false;
     
-    // Get label configuration based on game type
     const getFieldLabels = () => {
-      // Riot games use Riot ID
       if (normalizedName.includes('valorant') || normalizedName.includes('league of legends') || 
           normalizedName === 'lol' || normalizedName.includes('wild rift') ||
           normalizedName.includes('teamfight tactics') || normalizedName === 'tft' ||
@@ -181,94 +163,49 @@ const TopupPage: React.FC = () => {
         return { userLabel: 'Riot ID', userPlaceholder: 'Name#Tag', example: 'ឧទាហរណ៍: PlayerName#1234' };
       }
       
-      // Mobile Legends uses User ID + Server ID
       if (normalizedName.includes('mobile legends') || normalizedName === 'mlbb' || normalizedName.includes('magic chess')) {
-        return { userLabel: 'User ID', userPlaceholder: 'បញ្ចូល User ID', serverLabel: 'Server ID', example: 'ឧទាហរណ៍: 123456789 (1234)' };
+        return { userLabel: 'User ID', userPlaceholder: 'Enter your player/user ID', serverLabel: 'Server ID', example: 'ឧទាហរណ៍: 123456789 (1234)' };
       }
       
-      // Genshin/Honkai/miHoYo games use UID
       if (normalizedName.includes('genshin') || normalizedName.includes('honkai') || 
           normalizedName.includes('zenless zone zero') || normalizedName === 'zzz' ||
           normalizedName.includes('wuthering waves') || normalizedName.includes('tower of fantasy')) {
         return { userLabel: 'UID', userPlaceholder: 'បញ្ចូល UID', serverLabel: 'Server', example: 'ឧទាហរណ៍: 8001234567' };
       }
       
-      // PUBG uses Character ID
       if (normalizedName.includes('pubg')) {
         return { userLabel: 'Character ID', userPlaceholder: 'បញ្ចូល Character ID', example: 'ឧទាហរណ៍: 5123456789' };
       }
       
-      // COD uses Player UID
       if (normalizedName.includes('call of duty') || normalizedName.includes('cod')) {
         return { userLabel: 'Player UID', userPlaceholder: 'បញ្ចូល Player UID', example: 'ឧទាហរណ៍: 6742123456789' };
       }
       
-      // Supercell games use Player Tag
       if (normalizedName.includes('clash of clans') || normalizedName === 'coc' ||
           normalizedName.includes('clash royale') || normalizedName.includes('brawl stars')) {
         return { userLabel: 'Player Tag', userPlaceholder: '#ABC123', example: 'ឧទាហរណ៍: #ABC123XY' };
       }
       
-      // TikTok uses Username
-      if (normalizedName.includes('tiktok')) {
-        return { userLabel: 'TikTok Username', userPlaceholder: '@username', example: 'ឧទាហរណ៍: @yourusername' };
+      if (normalizedName.includes('free fire')) {
+        return { userLabel: 'Player ID', userPlaceholder: 'Enter your player ID', example: 'ឧទាហរណ៍: 123456789' };
       }
       
-      // Zepeto
-      if (normalizedName.includes('zepeto')) {
-        return { userLabel: 'ZEPETO ID', userPlaceholder: 'បញ្ចូល ZEPETO ID', example: 'ឧទាហរណ៍: abc123xyz' };
-      }
-      
-      // Roblox uses Username
-      if (normalizedName.includes('roblox')) {
-        return { userLabel: 'Roblox Username', userPlaceholder: 'បញ្ចូល Username', example: 'ឧទាហរណ៍: YourRobloxName' };
-      }
-      
-      // Steam uses Steam ID
-      if (normalizedName.includes('steam')) {
-        return { userLabel: 'Steam ID', userPlaceholder: 'បញ្ចូល Steam ID', example: 'ឧទាហរណ៍: 76561198012345678' };
-      }
-      
-      // Discord
-      if (normalizedName.includes('discord')) {
-        return { userLabel: 'Discord Username', userPlaceholder: 'username#0000', example: 'ឧទាហរណ៍: player#1234' };
-      }
-      
-      // Fortnite
-      if (normalizedName.includes('fortnite')) {
-        return { userLabel: 'Epic Games ID', userPlaceholder: 'បញ្ចូល Epic ID', example: 'ឧទាហរណ៍: EpicUsername' };
-      }
-      
-      // Ragnarok
-      if (normalizedName.includes('ragnarok')) {
-        return { userLabel: 'Character ID', userPlaceholder: 'បញ្ចូល Character ID', serverLabel: 'Server', example: 'ឧទាហរណ៍: 12345678' };
-      }
-      
-      // State/Survival games
-      if (normalizedName.includes('state of survival') || normalizedName.includes('whiteout survival') ||
-          normalizedName.includes('puzzles and survival')) {
-        return { userLabel: 'Player ID', userPlaceholder: 'បញ្ចូល Player ID', serverLabel: 'State', example: 'ឧទាហរណ៍: 12345678' };
-      }
-      
-      // Default
-      return { userLabel: 'Player ID', userPlaceholder: 'បញ្ចូល Player ID', serverLabel: 'Server', example: 'ឧទាហរណ៍: 123456789' };
+      return { userLabel: 'Player ID', userPlaceholder: 'Enter your player ID', serverLabel: 'Server', example: 'ឧទាហរណ៍: 123456789' };
     };
     
     const labels = getFieldLabels();
     
-    // Build fields based on database requires_zone setting
     if (requiresZone) {
       return {
         fields: [
           { key: 'userId', label: labels.userLabel, placeholder: labels.userPlaceholder },
-          { key: 'serverId', label: labels.serverLabel || 'Server', placeholder: labels.serverLabel || 'Server', width: 'w-24 sm:w-32' }
+          { key: 'serverId', label: labels.serverLabel || 'Server', placeholder: 'Enter your server / zone', width: 'w-full' }
         ],
         validation: `សូមបញ្ចូល ${labels.userLabel} និង ${labels.serverLabel || 'Server'}`,
         example: labels.example
       };
     }
     
-    // Single field - no zone required
     return {
       fields: [{ key: 'userId', label: labels.userLabel, placeholder: labels.userPlaceholder }],
       validation: `សូមបញ្ចូល ${labels.userLabel}`,
@@ -279,14 +216,12 @@ const TopupPage: React.FC = () => {
   const gameIdConfig = game ? getGameIdConfig(game.name) : null;
   const hasMultipleFields = gameIdConfig && gameIdConfig.fields.length > 1;
 
-  // Handle ID verification using G2Bulk API
   const handleVerify = async (overrideRegion?: string) => {
     if (!userId.trim()) {
       toast({ title: gameIdConfig?.validation || "សូមបញ្ចូល Game ID", variant: "destructive" });
       return;
     }
     
-    // Check if zone/server is required (from database config or field config)
     const zoneRequired = gameVerificationConfig?.requires_zone || hasMultipleFields;
     if (zoneRequired && !serverId.trim()) {
       toast({ 
@@ -312,39 +247,26 @@ const TopupPage: React.FC = () => {
         },
       });
 
-      console.log('Verification response:', data, error);
-
       if (error) {
         let msg = error.message || 'Verification failed';
-
-        // Try to read backend error body when the function returns non-2xx
         const anyErr = error as any;
         if (anyErr?.context && typeof anyErr.context.json === 'function') {
           try {
             const body = await anyErr.context.json();
             msg = body?.error || body?.message || msg;
-            // Check if alternate regions are available
             if (body?.alternateRegions && Array.isArray(body.alternateRegions)) {
               setAlternateRegions(body.alternateRegions);
             }
-          } catch {
-            // ignore JSON parse failures
-          }
+          } catch {}
         }
-
         throw new Error(msg);
       }
 
       if (data?.success) {
-        // Enforce real verification only (no placeholder/manual fallbacks)
         if (data?.manualVerification) {
           const errorMsg = data?.message || "Automatic verification is unavailable. Please try again.";
           setVerificationError(errorMsg);
-          toast({
-            title: "ផ្ទៀងផ្ទាត់បរាជ័យ",
-            description: errorMsg,
-            variant: "destructive",
-          });
+          toast({ title: "ផ្ទៀងផ្ទាត់បរាជ័យ", description: errorMsg, variant: "destructive" });
           return;
         }
 
@@ -356,49 +278,32 @@ const TopupPage: React.FC = () => {
           accountName: data.accountName,
         });
 
-        // Save to cache for 24 hours
         saveToCache(userId, serverId);
-
-        toast({
-          title: "✓ ផ្ទៀងផ្ទាត់ដោយជោគជ័យ",
-          description: `Username: ${username}`,
-        });
+        toast({ title: "✓ ផ្ទៀងផ្ទាត់ដោយជោគជ័យ", description: `Username: ${username}` });
       } else {
         const errorMsg = data?.error || 'មិនអាចផ្ទៀងផ្ទាត់ ID បានទេ។';
         setVerificationError(errorMsg);
         
-        // Check if alternate regions are available
         if (data?.alternateRegions && Array.isArray(data.alternateRegions) && data.alternateRegions.length > 0) {
           setAlternateRegions(data.alternateRegions);
         }
         
-        toast({
-          title: "ផ្ទៀងផ្ទាត់បរាជ័យ",
-          description: errorMsg,
-          variant: "destructive",
-        });
+        toast({ title: "ផ្ទៀងផ្ទាត់បរាជ័យ", description: errorMsg, variant: "destructive" });
       }
     } catch (error: any) {
-      console.error('Verification error:', error);
-      const errorMsg = error?.message || "មិនអាចផ្ទៀងផ្ទាត់ ID បានទេ។ សូមពិនិត្យម្តងទៀត។";
+      const errorMsg = error?.message || "មិនអាចផ្ទៀងផ្ទាត់ ID បានទេ។";
       setVerificationError(errorMsg);
-      toast({ 
-        title: "ផ្ទៀងផ្ទាត់បរាជ័យ", 
-        description: errorMsg,
-        variant: "destructive" 
-      });
+      toast({ title: "ផ្ទៀងផ្ទាត់បរាជ័យ", description: errorMsg, variant: "destructive" });
     } finally {
       setIsVerifying(false);
     }
   };
 
-  // Handle trying a different region
   const handleTryRegion = (regionCode: string) => {
     setSelectedRegion(regionCode);
     handleVerify(regionCode);
   };
 
-  // Reset verification when ID changes
   const handleUserIdChange = (value: string) => {
     setUserId(value);
     setVerifiedUser(null);
@@ -413,39 +318,6 @@ const TopupPage: React.FC = () => {
     setVerificationError(null);
     setAlternateRegions([]);
     setSelectedRegion(null);
-  };
-
-  // Render dynamic ID input fields based on game
-  const renderIdInputs = () => {
-    if (!gameIdConfig) return null;
-    
-    const fields = gameIdConfig.fields;
-    
-    return (
-      <div className="space-y-2">
-        <div className={hasMultipleFields ? 'flex gap-2 sm:gap-4' : ''}>
-          {fields.map((field, index) => (
-            <div key={field.key} className={field.width || (hasMultipleFields && index === 0 ? 'flex-1' : '')}>
-              <label className="text-xs sm:text-sm font-medium mb-1.5 sm:mb-2 block" style={{ color: settings.frameColor || 'hsl(30 30% 35%)' }}>
-                {field.label}
-              </label>
-              <Input 
-                placeholder={field.placeholder}
-                value={field.key === 'userId' ? userId : serverId}
-                onChange={(e) => field.key === 'userId' ? handleUserIdChange(e.target.value) : handleServerIdChange(e.target.value)}
-                className="bg-white/80 border-0 rounded-full h-10 sm:h-12 px-4 sm:px-5 text-sm sm:text-base text-foreground placeholder:text-muted-foreground"
-                disabled={isVerifying}
-              />
-            </div>
-          ))}
-        </div>
-        {gameIdConfig.example && (
-          <p className="text-xs text-muted-foreground pl-1" style={{ color: settings.frameColor ? `${settings.frameColor}99` : 'hsl(30 30% 50%)' }}>
-            {gameIdConfig.example}
-          </p>
-        )}
-      </div>
-    );
   };
 
   const handleSubmit = async () => {
@@ -475,7 +347,6 @@ const TopupPage: React.FC = () => {
     
     if (!pkg) return;
 
-    // Handle Wallet payment directly
     if (selectedPayment === 'wallet') {
       if (!user) {
         toast({ title: "សូមចូលគណនីជាមុនសិន", description: "Please login to use wallet payment", variant: "destructive" });
@@ -483,11 +354,10 @@ const TopupPage: React.FC = () => {
         return;
       }
 
-      // Check if wallet has enough balance
       if (walletBalance < pkg.price) {
         toast({ 
           title: "សមតុល្យមិនគ្រប់គ្រាន់", 
-          description: `Your wallet balance ($${walletBalance.toFixed(2)}) is less than the package price ($${pkg.price.toFixed(2)}). Please top up your wallet first.`,
+          description: `Your wallet balance ($${walletBalance.toFixed(2)}) is less than the package price ($${pkg.price.toFixed(2)}).`,
           variant: "destructive" 
         });
         return;
@@ -496,7 +366,6 @@ const TopupPage: React.FC = () => {
       setIsSubmitting(true);
 
       try {
-        // Create order first
         const { data: orderData, error: orderError } = await supabase.functions.invoke('process-topup', {
           body: {
             game_name: game.name,
@@ -516,35 +385,17 @@ const TopupPage: React.FC = () => {
         const orderId = orderData?.order_id;
         if (!orderId) throw new Error('Failed to create order');
 
-        // Deduct from wallet
         const { data: walletResult, error: walletError } = await supabase.functions.invoke('wallet-topup', {
-          body: {
-            action: 'purchase',
-            amount: pkg.price,
-            orderId: orderId,
-          },
+          body: { action: 'purchase', amount: pkg.price, orderId: orderId },
         });
 
         if (walletError) throw walletError;
         if (walletResult?.error) throw new Error(walletResult.error);
 
-        // Order status is now updated server-side by the wallet-topup edge function
-        // This prevents client-side manipulation of order status
-
-        toast({
-          title: "✓ បង់ប្រាក់បានជោគជ័យ!",
-          description: `Paid $${pkg.price.toFixed(2)} from wallet. New balance: $${walletResult.newBalance.toFixed(2)}`,
-        });
-
-        // Navigate to invoice
+        toast({ title: "✓ បង់ប្រាក់បានជោគជ័យ!", description: `Paid $${pkg.price.toFixed(2)} from wallet.` });
         navigate(`/invoice/${orderId}`);
       } catch (error: any) {
-        console.error('Wallet payment error:', error);
-        toast({
-          title: "កំហុសក្នុងការបង់ប្រាក់",
-          description: error.message || "Failed to process wallet payment",
-          variant: "destructive",
-        });
+        toast({ title: "កំហុសក្នុងការបង់ប្រាក់", description: error.message || "Failed to process wallet payment", variant: "destructive" });
       } finally {
         setIsSubmitting(false);
       }
@@ -553,7 +404,6 @@ const TopupPage: React.FC = () => {
 
     const paymentMethod = paymentMethods.find(p => p.id === selectedPayment);
 
-    // Add to cart with verified player info and G2Bulk product ID
     addToCart({
       id: `${pkg.id}-${userId}-${Date.now()}`,
       packageId: pkg.id,
@@ -572,26 +422,25 @@ const TopupPage: React.FC = () => {
       g2bulkTypeId: pkg.g2bulkTypeId,
     });
 
-    toast({
-      title: "✓ បានបន្ថែមទៅកន្ត្រក!",
-      description: `${pkg.name} សម្រាប់ ${verifiedUser.username}`,
-    });
-
-    // Navigate to cart
+    toast({ title: "✓ បានបន្ថែមទៅកន្ត្រក!", description: `${pkg.name} សម្រាប់ ${verifiedUser.username}` });
     navigate('/cart');
   };
+
+  const selectedPkg = selectedPackage 
+    ? (game.packages.find(p => p.id === selectedPackage) || game.specialPackages.find(p => p.id === selectedPackage))
+    : null;
 
   return (
     <>
       <Helmet>
         <title>{game.name} Topup - {settings.siteName}</title>
-        <meta name="description" content={`Top up ${game.name} instantly. Choose from various packages and payment methods.`} />
+        <meta name="description" content={`Top up ${game.name} instantly.`} />
       </Helmet>
       
       <div 
-        className="min-h-screen pb-8"
+        className="min-h-screen"
         style={{
-          backgroundColor: settings.topupBackgroundColor || undefined,
+          backgroundColor: '#4a4a4a',
           backgroundImage: settings.topupBackgroundImage ? `url(${settings.topupBackgroundImage})` : undefined,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
@@ -600,415 +449,279 @@ const TopupPage: React.FC = () => {
       >
         <Header />
         
-        <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 max-w-4xl">
+        <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 max-w-7xl">
           {/* Back button */}
-          <Link to="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4 transition-colors">
+          <Link to="/" className="inline-flex items-center gap-2 text-sm text-gray-300 hover:text-white mb-4 transition-colors">
             <ArrowLeft className="w-4 h-4" />
             <span>ត្រលប់ក្រោយ</span>
           </Link>
-          
-          {/* Hero Section - Cover Image with Overlapping Game Info */}
-          <div className="relative mb-8 rounded-2xl overflow-hidden">
-            {/* Cover Image */}
-            <div className="relative w-full h-40 sm:h-52 md:h-64">
-              {game.coverImage ? (
-                <img 
-                  src={game.coverImage} 
-                  alt={`${game.name} cover`}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full bg-gradient-to-br from-gold/20 via-background to-gold/10" />
-              )}
-              {/* Gradient overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-card via-card/40 to-transparent" />
-            </div>
+
+          {/* Main 2-column layout like kiragamestore */}
+          <div className="flex flex-col lg:flex-row gap-4 lg:gap-6">
             
-            {/* Overlapping Game Info */}
-            <div className="relative -mt-12 sm:-mt-14 px-4 sm:px-6 pb-4 sm:pb-6">
-              <div className="flex items-end gap-3 sm:gap-4">
-                {/* Game Icon */}
-                <div className="relative shrink-0">
+            {/* LEFT SIDE - Packages */}
+            <div className="flex-1 order-2 lg:order-1">
+              {/* Featured Bundles / Special Packages */}
+              {game.specialPackages && game.specialPackages.length > 0 && (
+                <div className="mb-6 p-4 rounded-lg border border-border/20 bg-card/30 backdrop-blur-sm">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <Gift className="w-5 h-5 text-amber-400" />
+                      <span className="text-amber-400 font-bold">Featured Bundles</span>
+                    </div>
+                    <span className="text-xs text-gray-400">{game.specialPackages.length}</span>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-3">
+                    {[...game.specialPackages].sort((a, b) => a.price - b.price).map((pkg) => (
+                      <ModernPackageCard
+                        key={pkg.id}
+                        pkg={pkg}
+                        selected={selectedPackage === pkg.id}
+                        onSelect={() => setSelectedPackage(pkg.id)}
+                        variant="featured"
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* More Bundles / Regular Packages */}
+              <div className="p-4 rounded-lg border border-border/20 bg-card/30 backdrop-blur-sm">
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-amber-400 font-bold">More Bundles</span>
+                  <span className="text-xs text-gray-400">{game.packages.length} bundles</span>
+                </div>
+                
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-3">
+                  {[...game.packages].sort((a, b) => a.price - b.price).map((pkg) => (
+                    <ModernPackageCard
+                      key={pkg.id}
+                      pkg={pkg}
+                      selected={selectedPackage === pkg.id}
+                      onSelect={() => setSelectedPackage(pkg.id)}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* RIGHT SIDE - Banner, Enter ID, Payment */}
+            <div className="w-full lg:w-[380px] xl:w-[420px] order-1 lg:order-2 space-y-4">
+              
+              {/* Banner Image */}
+              {game.coverImage && (
+                <div className="rounded-lg overflow-hidden border border-border/20">
+                  <img 
+                    src={game.coverImage} 
+                    alt={game.name}
+                    className="w-full h-40 sm:h-48 object-cover"
+                  />
+                </div>
+              )}
+
+              {/* Game Info Card */}
+              <div className="p-4 rounded-lg border border-border/20 bg-card/50 backdrop-blur-sm">
+                <div className="flex items-center gap-3 mb-3">
                   <img 
                     src={game.image} 
                     alt={game.name}
-                    className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl sm:rounded-2xl object-cover border-3 sm:border-4 border-card shadow-xl"
+                    className="w-12 h-12 rounded-lg object-cover"
                   />
-                  <div className="absolute -bottom-1 -right-1 sm:-bottom-2 sm:-right-2 w-6 h-6 sm:w-8 sm:h-8 bg-emerald-500 rounded-full flex items-center justify-center border-2 border-card shadow-md">
-                    <Zap className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
-                  </div>
-                </div>
-                
-                {/* Game Name & Badges */}
-                <div className="flex-1 min-w-0 pb-1">
-                  <h1 className="font-display text-xl sm:text-2xl md:text-3xl font-bold mb-1.5 sm:mb-2 gold-text truncate">
-                    {game.name}
-                  </h1>
-                  <div className="flex flex-wrap gap-1.5 sm:gap-2">
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 sm:py-1 rounded-full bg-emerald-500/20 text-emerald-400 text-[10px] sm:text-xs font-medium backdrop-blur-sm">
-                      <Shield className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-                      Safety guarantees
-                    </span>
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 sm:py-1 rounded-full bg-gold/20 text-gold text-[10px] sm:text-xs font-medium backdrop-blur-sm">
-                      <Zap className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-                      Instant Top-up
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          {/* Step 1: Enter ID - Modern Card Style */}
-          <div className="mb-6 sm:mb-8 p-4 sm:p-6 rounded-xl sm:rounded-2xl bg-gradient-to-br from-card via-card to-card/80 border border-border/50 relative overflow-hidden">
-            {/* Decorative Elements */}
-            <div className="absolute top-0 right-0 w-24 sm:w-32 h-24 sm:h-32 bg-gold/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-            <div className="absolute bottom-0 left-0 w-20 sm:w-24 h-20 sm:h-24 bg-emerald-500/5 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2" />
-            
-            {/* Header */}
-            <div className="flex items-center gap-2.5 sm:gap-3 mb-4 sm:mb-6 relative">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-gradient-to-br from-gold to-gold-dark flex items-center justify-center text-primary-foreground font-bold shadow-lg text-sm sm:text-base">
-                1
-              </div>
-              <div>
-                <h2 className="font-bold text-base sm:text-lg">Enter Your ID</h2>
-                <p className="text-[10px] sm:text-xs text-muted-foreground">សុំបញ្ចូល ID របស់អ្នក</p>
-              </div>
-            </div>
-            
-            {/* Dynamic ID inputs based on game */}
-            <div className="mb-4 relative">
-              {renderIdInputs()}
-            </div>
-            
-            {/* Verification Status Display */}
-            {verifiedUser && (
-              <div className="relative overflow-hidden rounded-2xl mb-4 animate-fade-in">
-                {/* Gradient Background */}
-                <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/20 via-teal-500/20 to-cyan-500/20" />
-                <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-transparent" />
-                
-                {/* Animated Border */}
-                <div className="absolute inset-0 rounded-2xl border-2 border-emerald-500/40" />
-                
-                {/* Shimmer Effect */}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full animate-[shimmer_2s_infinite]" 
-                     style={{ animation: 'shimmer 2s infinite' }} />
-                
-                <div className="relative p-4 sm:p-5">
-                  {/* Success Header */}
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="relative">
-                      <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-lg shadow-emerald-500/30">
-                        <CheckCircle className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
-                      </div>
-                      {/* Pulse ring */}
-                      <div className="absolute inset-0 rounded-full border-2 border-emerald-400 animate-ping opacity-20" />
-                    </div>
-                    <div>
-                      <h3 className="text-emerald-400 font-bold text-base sm:text-lg">✓ ផ្ទៀងផ្ទាត់បានជោគជ័យ</h3>
-                      <p className="text-emerald-300/60 text-xs sm:text-sm">Verification Complete</p>
+                  <div>
+                    <h1 className="font-bold text-white text-lg">{game.name}</h1>
+                    <div className="flex items-center gap-2 text-xs">
+                      <span className="flex items-center gap-1 text-emerald-400">
+                        <Shield className="w-3 h-3" />
+                        Safety guarantees
+                      </span>
+                      <span className="flex items-center gap-1 text-amber-400">
+                        <Zap className="w-3 h-3" />
+                        Instant Top-up
+                      </span>
                     </div>
                   </div>
+                </div>
+
+                {/* Enter Your ID Section */}
+                <div className="border-t border-border/20 pt-4">
+                  <h3 className="text-amber-400 font-bold mb-3">Enter Your ID & Server</h3>
                   
-                  {/* User Info Card */}
-                  <div className="bg-background/40 backdrop-blur-sm rounded-xl p-3 sm:p-4 border border-emerald-500/20">
-                    {/* Username - Large Display with Unicode Support */}
-                    <div className="flex items-center gap-2 mb-3">
-                      <UserCheck className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400 flex-shrink-0" />
-                      <span className="text-emerald-300/70 text-xs sm:text-sm">Username:</span>
-                    </div>
-                    <p 
-                      className="text-lg sm:text-xl md:text-2xl font-bold text-white break-all leading-relaxed mb-3"
-                      style={{ fontFamily: "'Noto Sans', 'Noto Sans Khmer', 'Segoe UI Emoji', 'Apple Color Emoji', system-ui, sans-serif" }}
-                    >
-                      {verifiedUser.username}
-                    </p>
-                    
-                    {/* ID & Server Info */}
-                    <div className="flex flex-wrap gap-2 sm:gap-3">
-                      <div className="flex-1 min-w-[120px] bg-emerald-500/10 rounded-lg px-3 py-2">
-                        <p className="text-[10px] sm:text-xs text-emerald-300/60 mb-0.5">Player ID</p>
-                        <p className="text-sm sm:text-base font-semibold text-emerald-200 break-all">{verifiedUser.id}</p>
+                  <div className="space-y-3">
+                    {gameIdConfig?.fields.map((field) => (
+                      <Input 
+                        key={field.key}
+                        placeholder={field.placeholder}
+                        value={field.key === 'userId' ? userId : serverId}
+                        onChange={(e) => field.key === 'userId' ? handleUserIdChange(e.target.value) : handleServerIdChange(e.target.value)}
+                        className="bg-gray-700/50 border-gray-600 text-white placeholder:text-gray-400 rounded-md"
+                        disabled={isVerifying}
+                      />
+                    ))}
+                  </div>
+
+                  {/* Verification Status */}
+                  {verifiedUser && (
+                    <div className="mt-3 p-3 rounded-lg bg-emerald-500/20 border border-emerald-500/30">
+                      <div className="flex items-center gap-2 text-emerald-400">
+                        <CheckCircle className="w-4 h-4" />
+                        <span className="font-medium text-sm">Verified: {verifiedUser.username}</span>
                       </div>
-                      {verifiedUser.serverId && (
-                        <div className="bg-emerald-500/10 rounded-lg px-3 py-2">
-                          <p className="text-[10px] sm:text-xs text-emerald-300/60 mb-0.5">Server</p>
-                          <p className="text-sm sm:text-base font-semibold text-emerald-200">{verifiedUser.serverId}</p>
-                        </div>
-                      )}
                     </div>
+                  )}
+
+                  {verificationError && (
+                    <div className="mt-3 p-3 rounded-lg bg-red-500/20 border border-red-500/30">
+                      <div className="flex items-start gap-2 text-red-400">
+                        <XCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                        <div className="text-sm">
+                          <p>{verificationError}</p>
+                          {alternateRegions.length > 0 && (
+                            <div className="mt-2 flex flex-wrap gap-1">
+                              <p className="text-xs text-amber-300 w-full mb-1">Try another region:</p>
+                              {alternateRegions.map((region) => (
+                                <Button
+                                  key={region}
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleTryRegion(region)}
+                                  disabled={isVerifying}
+                                  className="h-6 text-xs border-amber-500/50 text-amber-300 hover:bg-amber-500/20"
+                                >
+                                  {region.toUpperCase().replace(/-/g, ' ')}
+                                </Button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Check Your Name Button */}
+                  <Button 
+                    onClick={() => handleVerify()}
+                    disabled={isVerifying || !userId.trim() || !!verifiedUser}
+                    className={cn(
+                      "w-full mt-4 py-3 rounded-md font-bold",
+                      verifiedUser 
+                        ? "bg-emerald-500 hover:bg-emerald-600" 
+                        : "bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700"
+                    )}
+                  >
+                    {isVerifying ? (
+                      <span className="flex items-center gap-2">
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Checking...
+                      </span>
+                    ) : verifiedUser ? (
+                      <span className="flex items-center gap-2">
+                        <CheckCircle className="w-4 h-4" />
+                        Verified
+                      </span>
+                    ) : (
+                      'Check Your Name'
+                    )}
+                  </Button>
+                </div>
+              </div>
+
+              {/* Payment Selection Card */}
+              <div className="p-4 rounded-lg border border-border/20 bg-card/50 backdrop-blur-sm">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-8 h-8 rounded-md bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold text-sm">
+                    KHQR
+                  </div>
+                  <div>
+                    <p className="font-bold text-white text-sm">ABA KHQR</p>
+                    <p className="text-xs text-gray-400">Scan to pay with any banking app</p>
                   </div>
                 </div>
-              </div>
-            )}
 
-            {verificationError && (
-              <div className="relative overflow-hidden rounded-2xl mb-4 animate-fade-in">
-                {/* Error Background */}
-                <div className="absolute inset-0 bg-gradient-to-r from-red-500/15 via-rose-500/10 to-red-500/15" />
-                <div className="absolute inset-0 rounded-2xl border border-red-500/30" />
-                
-                <div className="relative p-4 sm:p-5">
-                  <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-red-400 to-rose-500 flex items-center justify-center shadow-lg shadow-red-500/20 flex-shrink-0">
-                      <XCircle className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-red-400 font-bold text-sm sm:text-base mb-1">ផ្ទៀងផ្ទាត់បរាជ័យ</h3>
-                      <p className="text-red-300/80 text-xs sm:text-sm break-words">{verificationError}</p>
-                      
-                      {/* Region Switcher - Show when alternate regions are available */}
-                      {alternateRegions.length > 0 && (
-                        <div className="mt-3 pt-3 border-t border-red-500/20">
-                          <p className="text-xs text-amber-300/80 mb-2 flex items-center gap-1">
-                            <AlertCircle className="w-3 h-3" />
-                            Try a different region:
-                          </p>
-                          <div className="flex flex-wrap gap-2">
-                            {alternateRegions.map((region) => (
-                              <Button
-                                key={region}
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleTryRegion(region)}
-                                disabled={isVerifying}
-                                className="h-7 text-xs border-amber-500/50 text-amber-300 hover:bg-amber-500/20 hover:border-amber-400"
-                              >
-                                {region.toUpperCase().replace(/-/g, ' ')}
-                              </Button>
-                            ))}
-                          </div>
-                        </div>
+                {/* Payment Methods Grid */}
+                <div className="grid grid-cols-4 gap-2 mb-4">
+                  {/* Wallet Option */}
+                  <button
+                    onClick={() => setSelectedPayment('wallet')}
+                    className={cn(
+                      "p-2 rounded-md border transition-all flex flex-col items-center gap-1",
+                      selectedPayment === 'wallet'
+                        ? "border-emerald-500 bg-emerald-500/20"
+                        : "border-gray-600 bg-gray-700/30 hover:border-gray-500"
+                    )}
+                  >
+                    <Wallet className="w-5 h-5 text-emerald-400" />
+                    <span className="text-[9px] text-gray-300">Wallet</span>
+                    {user && <span className="text-[8px] text-emerald-400">${walletBalance.toFixed(2)}</span>}
+                  </button>
+                  
+                  {paymentMethods.slice(0, 3).map((method) => (
+                    <button
+                      key={method.id}
+                      onClick={() => setSelectedPayment(method.id)}
+                      className={cn(
+                        "p-2 rounded-md border transition-all flex flex-col items-center gap-1",
+                        selectedPayment === method.id
+                          ? "border-amber-500 bg-amber-500/20"
+                          : "border-gray-600 bg-gray-700/30 hover:border-gray-500"
                       )}
-                    </div>
+                    >
+                      {method.icon.startsWith('http') ? (
+                        <img src={method.icon} alt={method.name} className="w-5 h-5 rounded object-cover" />
+                      ) : (
+                        <span className="text-lg">{method.icon}</span>
+                      )}
+                      <span className="text-[9px] text-gray-300 line-clamp-1">{method.name}</span>
+                    </button>
+                  ))}
+                </div>
+
+                {/* Terms checkbox */}
+                <label className="flex items-start gap-2 mb-4 cursor-pointer">
+                  <button
+                    onClick={() => setAgreedToTerms(!agreedToTerms)}
+                    className={cn(
+                      "w-4 h-4 rounded border flex items-center justify-center transition-all flex-shrink-0 mt-0.5",
+                      agreedToTerms 
+                        ? "bg-amber-500 border-amber-500" 
+                        : "border-gray-500"
+                    )}
+                  >
+                    {agreedToTerms && <CheckCircle className="w-3 h-3 text-white" />}
+                  </button>
+                  <span className="text-xs text-gray-300">
+                    By clicking the Pay Now button, you agree to our{' '}
+                    <span className="text-amber-400 hover:underline cursor-pointer">Terms and Conditions</span>.
+                  </span>
+                </label>
+
+                {/* Total and Pay Now */}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-gray-400">Total:</p>
+                    <p className="text-2xl font-bold text-white">
+                      ${selectedPkg?.price.toFixed(2) || '0.00'}
+                    </p>
                   </div>
+                  <Button 
+                    onClick={handleSubmit}
+                    disabled={isSubmitting || !agreedToTerms || !selectedPackage || !selectedPayment || !verifiedUser}
+                    className="px-6 py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold rounded-full disabled:opacity-50"
+                  >
+                    {isSubmitting ? (
+                      <span className="flex items-center gap-2">
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Processing...
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-2">
+                        🔒 Pay Now
+                      </span>
+                    )}
+                  </Button>
                 </div>
               </div>
-            )}
-
-            {!verifiedUser && (
-              <p className="text-xs text-muted-foreground mt-3">
-                Enter your ID and click "Verify" to continue
-              </p>
-            )}
-            
-            {/* Verify Button */}
-            <div className="flex justify-center mt-6 relative">
-              <Button 
-                onClick={() => handleVerify()}
-                disabled={isVerifying || !userId.trim() || !!verifiedUser}
-                className={cn(
-                  "rounded-xl px-8 py-3 h-auto flex items-center gap-2 font-bold transition-all",
-                  verifiedUser 
-                    ? "bg-emerald-500 hover:bg-emerald-600 text-white" 
-                    : "bg-gradient-to-r from-gold to-gold-dark hover:from-gold-dark hover:to-gold text-primary-foreground"
-                )}
-              >
-                {isVerifying ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Verifying...</span>
-                  </>
-                ) : verifiedUser ? (
-                  <>
-                    <CheckCircle className="w-4 h-4" />
-                    <span>Verified</span>
-                  </>
-                ) : (
-                  <span>Verify ID</span>
-                )}
-              </Button>
             </div>
-          </div>
-
-          {/* Special Offers Section */}
-          {game.specialPackages && game.specialPackages.length > 0 && (
-            <div className="mb-6 sm:mb-8">
-              <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
-                <div className="flex items-center gap-1.5 sm:gap-2 px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl bg-gradient-to-r from-red-500 to-orange-500">
-                  <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
-                  <span className="text-white font-bold text-xs sm:text-sm">Special Offers</span>
-                </div>
-                <span className="text-[10px] sm:text-xs text-muted-foreground">
-                  {game.specialPackages.length} packages
-                </span>
-              </div>
-              
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-3">
-                {[...game.specialPackages].sort((a, b) => a.price - b.price).map((pkg) => (
-                  <ModernPackageCard
-                    key={pkg.id}
-                    pkg={pkg}
-                    selected={selectedPackage === pkg.id}
-                    onSelect={() => setSelectedPackage(pkg.id)}
-                    variant="featured"
-                  />
-                ))}
-              </div>
-            </div>
-          )}
-          
-          {/* Step 2: Select Package - Modern Grid */}
-          <div className="mb-6 sm:mb-8">
-            <div className="flex items-center gap-2.5 sm:gap-3 mb-3 sm:mb-4">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-gradient-to-br from-gold to-gold-dark flex items-center justify-center text-primary-foreground font-bold shadow-lg text-sm sm:text-base">
-                2
-              </div>
-              <div>
-                <h2 className="font-bold text-base sm:text-lg">Select Package</h2>
-                <p className="text-[10px] sm:text-xs text-muted-foreground">{game.packages.length} packages available</p>
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-3">
-              {[...game.packages].sort((a, b) => a.price - b.price).map((pkg) => (
-                <ModernPackageCard
-                  key={pkg.id}
-                  pkg={pkg}
-                  selected={selectedPackage === pkg.id}
-                  onSelect={() => setSelectedPackage(pkg.id)}
-                />
-              ))}
-            </div>
-          </div>
-          
-          {/* Step 3: Payment Method - Modern Card */}
-          <div className="mb-6 sm:mb-8 p-4 sm:p-6 rounded-xl sm:rounded-2xl bg-gradient-to-br from-card via-card to-card/80 border border-border/50">
-            <div className="flex items-center gap-2.5 sm:gap-3 mb-4 sm:mb-6">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-gradient-to-br from-gold to-gold-dark flex items-center justify-center text-primary-foreground font-bold shadow-lg text-sm sm:text-base">
-                3
-              </div>
-              <div>
-                <h2 className="font-bold text-base sm:text-lg">Payment Method</h2>
-                <p className="text-[10px] sm:text-xs text-muted-foreground">ជ្រើសរើសធនាគារបង់ប្រាក់</p>
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-3 gap-2 sm:gap-3">
-              {/* Wallet Payment Option with Balance */}
-              <button
-                onClick={() => setSelectedPayment('wallet')}
-                className={cn(
-                  "p-2.5 sm:p-4 rounded-lg sm:rounded-xl border-2 transition-all flex flex-col items-center gap-1.5 sm:gap-2 relative",
-                  "hover:scale-[1.02] active:scale-[0.98]",
-                  selectedPayment === 'wallet'
-                    ? "border-emerald-500 bg-emerald-500/10 shadow-lg shadow-emerald-500/10"
-                    : "border-border/50 bg-card hover:border-emerald-500/50"
-                )}
-              >
-                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-md sm:rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center">
-                  <Wallet className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-                </div>
-                <span className="text-[10px] sm:text-xs font-medium">Wallet</span>
-                {user && (
-                  <span className={cn(
-                    "text-[9px] sm:text-[10px] font-bold",
-                    walletBalance > 0 ? "text-emerald-400" : "text-muted-foreground"
-                  )}>
-                    ${walletBalance.toFixed(2)}
-                  </span>
-                )}
-                {selectedPayment === 'wallet' && (
-                  <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 text-emerald-500" />
-                )}
-              </button>
-              
-              {paymentMethods.map((method) => (
-                <button
-                  key={method.id}
-                  onClick={() => setSelectedPayment(method.id)}
-                  className={cn(
-                    "p-2.5 sm:p-4 rounded-lg sm:rounded-xl border-2 transition-all flex flex-col items-center gap-1.5 sm:gap-2",
-                    "hover:scale-[1.02] active:scale-[0.98]",
-                    selectedPayment === method.id
-                      ? "border-gold bg-gold/10 shadow-lg shadow-gold/10"
-                      : "border-border/50 bg-card hover:border-gold/50"
-                  )}
-                >
-                  {method.icon.startsWith('http') ? (
-                    <img 
-                      src={method.icon} 
-                      alt={method.name}
-                      className="w-8 h-8 sm:w-10 sm:h-10 rounded-md sm:rounded-lg object-cover"
-                    />
-                  ) : (
-                    <span className="text-xl sm:text-2xl">{method.icon}</span>
-                  )}
-                  <span className="text-[10px] sm:text-xs font-medium line-clamp-1">{method.name}</span>
-                  {selectedPayment === method.id && (
-                    <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 text-gold" />
-                  )}
-                </button>
-              ))}
-            </div>
-          </div>
-          
-          {/* Step 4: Confirm & Pay */}
-          <div className="p-4 sm:p-6 rounded-xl sm:rounded-2xl bg-gradient-to-br from-card via-card to-card/80 border border-border/50">
-            <div className="flex items-center gap-2.5 sm:gap-3 mb-4 sm:mb-6">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-gradient-to-br from-gold to-gold-dark flex items-center justify-center text-primary-foreground font-bold shadow-lg text-sm sm:text-base">
-                4
-              </div>
-              <div>
-                <h2 className="font-bold text-base sm:text-lg">Confirm & Pay</h2>
-                <p className="text-[10px] sm:text-xs text-muted-foreground">យកព្រមទទួលលក្ខខណ្ឌ</p>
-              </div>
-            </div>
-            
-            <label className="flex items-center gap-2.5 sm:gap-3 mb-4 sm:mb-6 cursor-pointer group">
-              <button
-                onClick={() => setAgreedToTerms(!agreedToTerms)}
-                className={cn(
-                  "w-5 h-5 sm:w-6 sm:h-6 rounded-md sm:rounded-lg border-2 flex items-center justify-center transition-all flex-shrink-0",
-                  agreedToTerms 
-                    ? "bg-gold border-gold" 
-                    : "border-border group-hover:border-gold/50"
-                )}
-              >
-                {agreedToTerms && <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 text-primary-foreground" />}
-              </button>
-              <span className="text-xs sm:text-sm">
-                I agree to the <span className="text-gold cursor-pointer hover:underline">Terms and Conditions</span>
-              </span>
-            </label>
-            
-            {/* Order Summary */}
-            {selectedPackage && (
-              <div className="mb-4 sm:mb-6 p-3 sm:p-4 rounded-lg sm:rounded-xl bg-secondary/30 border border-border/50">
-                <div className="flex justify-between items-center">
-                  <span className="text-xs sm:text-sm text-muted-foreground">Selected Package:</span>
-                  <span className="font-bold text-sm sm:text-base">
-                    {(game.packages.find(p => p.id === selectedPackage) || game.specialPackages.find(p => p.id === selectedPackage))?.name}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center mt-1.5 sm:mt-2">
-                  <span className="text-xs sm:text-sm text-muted-foreground">Total:</span>
-                  <span className="text-xl sm:text-2xl font-bold gold-text">
-                    {settings.packageCurrencySymbol || '$'}
-                    {((game.packages.find(p => p.id === selectedPackage) || game.specialPackages.find(p => p.id === selectedPackage))?.price || 0).toFixed(2)}
-                  </span>
-                </div>
-              </div>
-            )}
-            
-            <Button 
-              onClick={handleSubmit}
-              disabled={isSubmitting || !agreedToTerms || !selectedPackage || !selectedPayment || !verifiedUser}
-              className="w-full py-4 sm:py-6 text-base sm:text-lg font-bold bg-gradient-to-r from-gold to-gold-dark hover:from-gold-dark hover:to-gold text-primary-foreground shadow-lg shadow-gold/20 disabled:opacity-50 disabled:shadow-none rounded-lg sm:rounded-xl"
-            >
-              {isSubmitting ? (
-                <span className="flex items-center gap-2">
-                  <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
-                  Processing...
-                </span>
-              ) : (
-                <span className="flex items-center gap-2">
-                  <Zap className="w-4 h-4 sm:w-5 sm:h-5" />
-                  Pay Now
-                </span>
-              )}
-            </Button>
           </div>
         </div>
       </div>
