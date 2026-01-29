@@ -1,7 +1,7 @@
 import React from 'react';
 import { Game, useSite } from '@/contexts/SiteContext';
 import { useLanguage } from '@/contexts/LanguageContext';
-import FeaturedGameCard from './FeaturedGameCard';
+import KiraStyleGameCard from './KiraStyleGameCard';
 import SectionHeader from './SectionHeader';
 import { Crown } from 'lucide-react';
 
@@ -35,15 +35,12 @@ const FeaturedGamesSection: React.FC<FeaturedGamesSectionProps> = ({ games }) =>
           icon={Crown}
         />
         
-        {/* Featured games grid - 3 cols mobile, 4 cols tablet, 4-5 cols desktop (smaller cards) */}
-        <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3 lg:gap-4 max-w-6xl mx-auto">
-          {featuredGames.map((game, index) => (
-            <FeaturedGameCard 
+        {/* Featured games grid - 3 cols mobile, 4 cols tablet, 6 cols desktop */}
+        <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-2 sm:gap-3 lg:gap-4 max-w-7xl mx-auto">
+          {featuredGames.map((game) => (
+            <KiraStyleGameCard 
               key={game.id} 
-              game={game} 
-              index={index}
-              bgColor={settings.gameCardBgColor}
-              borderColor={settings.gameCardBorderColor}
+              game={game}
             />
           ))}
         </div>

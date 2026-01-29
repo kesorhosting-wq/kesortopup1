@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Game, useSite } from '@/contexts/SiteContext';
 import { useLanguage } from '@/contexts/LanguageContext';
-import ModernGameCard from './ModernGameCard';
+import KiraStyleGameCard from './KiraStyleGameCard';
 import SectionHeader from './SectionHeader';
 import { Gamepad2, Search, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -71,15 +71,13 @@ const AllGamesSection: React.FC<AllGamesSectionProps> = ({ games }) => {
           )}
         </div>
         
-        {/* All games grid - 3 cols mobile, 4 cols tablet, 5-6 cols desktop (smaller cards) */}
+        {/* All games grid - 3 cols mobile, 4 cols tablet, 6 cols desktop */}
         {filteredAndSortedGames.length > 0 ? (
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2 sm:gap-3 lg:gap-4 max-w-6xl mx-auto">
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2 sm:gap-3 lg:gap-4 max-w-7xl mx-auto">
             {filteredAndSortedGames.map((game) => (
-              <ModernGameCard 
+              <KiraStyleGameCard 
                 key={game.id} 
                 game={game}
-                bgColor={settings.gameCardBgColor}
-                borderColor={settings.gameCardBorderColor}
               />
             ))}
           </div>

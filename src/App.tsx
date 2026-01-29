@@ -9,6 +9,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { CartProvider } from "@/contexts/CartContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import ProtectedRoute from "./components/ProtectedRoute";
+import CustomFontLoader from "./components/CustomFontLoader";
 import Index from "./pages/Index";
 import TopupPage from "./pages/TopupPage";
 import CartPage from "./pages/CartPage";
@@ -32,6 +33,7 @@ const App = () => (
             <SiteProvider>
               <CartProvider>
                 <TooltipProvider>
+                  <CustomFontLoader />
                   <Toaster />
                   <Sonner />
                   <Routes>
