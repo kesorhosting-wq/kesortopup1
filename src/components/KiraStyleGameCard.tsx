@@ -13,8 +13,8 @@ const KiraStyleGameCard: React.FC<KiraStyleGameCardProps> = ({ game }) => {
       to={`/topup/${game.id}`} 
       className="group relative block rounded-lg overflow-hidden bg-card/80 border border-border/30 hover:border-gold/50 transition-all duration-300 hover:shadow-lg hover:shadow-gold/10"
     >
-      {/* Game Image - Full height, no overlay */}
-      <div className="relative aspect-[3/4] overflow-hidden">
+      {/* Game Image - Square 1:1 aspect ratio like kiragamestore */}
+      <div className="relative aspect-square overflow-hidden">
         <img 
           src={game.image} 
           alt={game.name}

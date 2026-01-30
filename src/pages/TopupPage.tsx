@@ -524,7 +524,7 @@ const TopupPage: React.FC = () => {
           {/* Main 2-column layout like kiragamestore */}
           <div className="flex flex-col lg:flex-row gap-4 lg:gap-6">
             {/* LEFT SIDE - Packages */}
-            <div className="flex-1 order-2 lg:order-1">
+            <div className="flex-1 order-1 lg:order-1">
               {/* Featured Bundles / Special Packages */}
               {game.specialPackages && game.specialPackages.length > 0 && (
                 <div className="mb-6 p-4 rounded-lg border border-border/20 bg-card/30 backdrop-blur-sm">
@@ -575,7 +575,7 @@ const TopupPage: React.FC = () => {
             </div>
 
             {/* RIGHT SIDE - Banner, Enter ID, Payment */}
-            <div className="w-full lg:w-[380px] xl:w-[420px] order-1 lg:order-2 space-y-4">
+            <div className="w-full lg:w-[380px] xl:w-[420px] order-2 lg:order-2 space-y-4">
               {/* Banner Image */}
               {game.coverImage && (
                 <div className="rounded-lg overflow-hidden border border-border/20">
