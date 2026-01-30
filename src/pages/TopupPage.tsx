@@ -523,8 +523,8 @@ const TopupPage: React.FC = () => {
 
           {/* Main 2-column layout like kiragamestore */}
           <div className="flex flex-col lg:flex-row gap-4 lg:gap-6">
-            {/* LEFT SIDE - Packages */}
-            <div className="flex-1 order-1 lg:order-1">
+            {/* LEFT SIDE - Packages (order-2 on mobile, order-1 on desktop) */}
+            <div className="flex-1 order-2 lg:order-1">
               {/* Featured Bundles / Special Packages */}
               {game.specialPackages && game.specialPackages.length > 0 && (
                 <div className="mb-6 p-4 rounded-lg border border-border/20 bg-card/30 backdrop-blur-sm">
@@ -574,208 +574,213 @@ const TopupPage: React.FC = () => {
               </div>
             </div>
 
-            {/* RIGHT SIDE - Banner, Enter ID, Payment */}
-            <div className="w-full lg:w-[380px] xl:w-[420px] order-2 lg:order-2 space-y-4">
-              {/* Banner Image */}
-              {game.coverImage && (
-                <div className="rounded-lg overflow-hidden border border-border/20">
-                  <img src={game.coverImage} alt={game.name} className="w-full h-40 sm:h-48 object-cover" />
-                </div>
-              )}
-
-              {/* Game Info Card */}
-              <div className="p-4 rounded-lg border border-border/20 bg-card/50 backdrop-blur-sm">
-                <div className="flex items-center gap-3 mb-3">
-                  <img src={game.image} alt={game.name} className="w-12 h-12 rounded-lg object-cover" />
-                  <div>
-                    <h1 className="font-bold text-white text-lg">{game.name}</h1>
-                    <div className="flex items-center gap-2 text-xs">
-                      <span className="flex items-center gap-1 text-emerald-400">
-                        <Shield className="w-3 h-3" />
-                        Safety guarantees
-                      </span>
-                      <span className="flex items-center gap-1 text-amber-400">
-                        <Zap className="w-3 h-3" />
-                        Instant Top-up
-                      </span>
-                    </div>
+            {/* RIGHT SIDE - Split into 3 sections with mobile ordering */}
+            <div className="w-full lg:w-[380px] xl:w-[420px] contents lg:block lg:space-y-4">
+              {/* Banner + Enter ID Section (order-1 on mobile - FIRST) */}
+              <div className="order-1 lg:order-none space-y-4 mb-4 lg:mb-0">
+                {/* Banner Image */}
+                {game.coverImage && (
+                  <div className="rounded-lg overflow-hidden border border-border/20">
+                    <img src={game.coverImage} alt={game.name} className="w-full h-40 sm:h-48 object-cover" />
                   </div>
-                </div>
+                )}
 
-                {/* Enter Your ID Section */}
-                <div className="border-t border-border/20 pt-4">
-                  <h3 className="text-amber-400 font-bold mb-3">Enter Your ID & Server</h3>
-
-                  <div className="space-y-3">
-                    {gameIdConfig?.fields.map((field) => (
-                      <Input
-                        key={field.key}
-                        placeholder={field.placeholder}
-                        value={field.key === "userId" ? userId : serverId}
-                        onChange={(e) =>
-                          field.key === "userId"
-                            ? handleUserIdChange(e.target.value)
-                            : handleServerIdChange(e.target.value)
-                        }
-                        className="bg-gray-700/50 border-gray-600 text-white placeholder:text-gray-400 rounded-md"
-                        disabled={isVerifying}
-                      />
-                    ))}
-                  </div>
-
-                  {/* Verification Status */}
-                  {verifiedUser && (
-                    <div className="mt-3 p-3 rounded-lg bg-emerald-500/20 border border-emerald-500/30">
-                      <div className="flex items-center gap-2 text-emerald-400">
-                        <CheckCircle className="w-4 h-4" />
-                        <span className="font-medium text-sm">Verified: {verifiedUser.username}</span>
+                {/* Game Info Card with Enter ID */}
+                <div className="p-4 rounded-lg border border-border/20 bg-card/50 backdrop-blur-sm">
+                  <div className="flex items-center gap-3 mb-3">
+                    <img src={game.image} alt={game.name} className="w-12 h-12 rounded-lg object-cover" />
+                    <div>
+                      <h1 className="font-bold text-white text-lg">{game.name}</h1>
+                      <div className="flex items-center gap-2 text-xs">
+                        <span className="flex items-center gap-1 text-emerald-400">
+                          <Shield className="w-3 h-3" />
+                          Safety guarantees
+                        </span>
+                        <span className="flex items-center gap-1 text-amber-400">
+                          <Zap className="w-3 h-3" />
+                          Instant Top-up
+                        </span>
                       </div>
                     </div>
-                  )}
+                  </div>
 
-                  {verificationError && (
-                    <div className="mt-3 p-3 rounded-lg bg-red-500/20 border border-red-500/30">
-                      <div className="flex items-start gap-2 text-red-400">
-                        <XCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                        <div className="text-sm">
-                          <p>{verificationError}</p>
-                          {alternateRegions.length > 0 && (
-                            <div className="mt-2 flex flex-wrap gap-1">
-                              <p className="text-xs text-amber-300 w-full mb-1">Try another region:</p>
-                              {alternateRegions.map((region) => (
-                                <Button
-                                  key={region}
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => handleTryRegion(region)}
-                                  disabled={isVerifying}
-                                  className="h-6 text-xs border-amber-500/50 text-amber-300 hover:bg-amber-500/20"
-                                >
-                                  {region.toUpperCase().replace(/-/g, " ")}
-                                </Button>
-                              ))}
-                            </div>
-                          )}
+                  {/* Enter Your ID Section */}
+                  <div className="border-t border-border/20 pt-4">
+                    <h3 className="text-amber-400 font-bold mb-3">Enter Your ID & Server</h3>
+
+                    <div className="space-y-3">
+                      {gameIdConfig?.fields.map((field) => (
+                        <Input
+                          key={field.key}
+                          placeholder={field.placeholder}
+                          value={field.key === "userId" ? userId : serverId}
+                          onChange={(e) =>
+                            field.key === "userId"
+                              ? handleUserIdChange(e.target.value)
+                              : handleServerIdChange(e.target.value)
+                          }
+                          className="bg-gray-700/50 border-gray-600 text-white placeholder:text-gray-400 rounded-md"
+                          disabled={isVerifying}
+                        />
+                      ))}
+                    </div>
+
+                    {/* Verification Status */}
+                    {verifiedUser && (
+                      <div className="mt-3 p-3 rounded-lg bg-emerald-500/20 border border-emerald-500/30">
+                        <div className="flex items-center gap-2 text-emerald-400">
+                          <CheckCircle className="w-4 h-4" />
+                          <span className="font-medium text-sm">Verified: {verifiedUser.username}</span>
                         </div>
                       </div>
-                    </div>
-                  )}
+                    )}
 
-                  {/* Check Your Name Button */}
-                  <Button
-                    onClick={() => handleVerify()}
-                    disabled={isVerifying || !userId.trim() || !!verifiedUser}
-                    className={cn(
-                      "w-full mt-4 py-3 rounded-md font-bold",
-                      verifiedUser
-                        ? "bg-emerald-500 hover:bg-emerald-600"
-                        : "bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700",
+                    {verificationError && (
+                      <div className="mt-3 p-3 rounded-lg bg-red-500/20 border border-red-500/30">
+                        <div className="flex items-start gap-2 text-red-400">
+                          <XCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                          <div className="text-sm">
+                            <p>{verificationError}</p>
+                            {alternateRegions.length > 0 && (
+                              <div className="mt-2 flex flex-wrap gap-1">
+                                <p className="text-xs text-amber-300 w-full mb-1">Try another region:</p>
+                                {alternateRegions.map((region) => (
+                                  <Button
+                                    key={region}
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => handleTryRegion(region)}
+                                    disabled={isVerifying}
+                                    className="h-6 text-xs border-amber-500/50 text-amber-300 hover:bg-amber-500/20"
+                                  >
+                                    {region.toUpperCase().replace(/-/g, " ")}
+                                  </Button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
                     )}
-                  >
-                    {isVerifying ? (
-                      <span className="flex items-center gap-2">
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        Checking...
-                      </span>
-                    ) : verifiedUser ? (
-                      <span className="flex items-center gap-2">
-                        <CheckCircle className="w-4 h-4" />
-                        Verified
-                      </span>
-                    ) : (
-                      "Check Your Name"
-                    )}
-                  </Button>
+
+                    {/* Check Your Name Button */}
+                    <Button
+                      onClick={() => handleVerify()}
+                      disabled={isVerifying || !userId.trim() || !!verifiedUser}
+                      className={cn(
+                        "w-full mt-4 py-3 rounded-md font-bold",
+                        verifiedUser
+                          ? "bg-emerald-500 hover:bg-emerald-600"
+                          : "bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700",
+                      )}
+                    >
+                      {isVerifying ? (
+                        <span className="flex items-center gap-2">
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Checking...
+                        </span>
+                      ) : verifiedUser ? (
+                        <span className="flex items-center gap-2">
+                          <CheckCircle className="w-4 h-4" />
+                          Verified
+                        </span>
+                      ) : (
+                        "Check Your Name"
+                      )}
+                    </Button>
+                  </div>
                 </div>
               </div>
 
-              {/* Payment Selection Card */}
-              <div className="p-4 rounded-lg border border-border/20 bg-card/50 backdrop-blur-sm">
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="w-8 h-8 rounded-md bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold text-sm">
-                    P
+              {/* Payment Selection Card (order-3 on mobile - LAST) */}
+              <div className="order-3 lg:order-none">
+                <div className="p-4 rounded-lg border border-border/20 bg-card/50 backdrop-blur-sm">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-8 h-8 rounded-md bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold text-sm">
+                      P
+                    </div>
+                    <div>
+                      <p className="font-bold text-white text-sm">Payments Selection</p>
+                      <p className="text-xs text-gray-400">Scan to pay with any banking app</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-bold text-white text-sm">Payments Selection</p>
-                    <p className="text-xs text-gray-400">Scan to pay with any banking app</p>
-                  </div>
-                </div>
 
-                {/* Payment Methods Grid */}
-                <div className="grid grid-cols-4 gap-2 mb-4">
-                  {/* Wallet Option */}
-                  <button
-                    onClick={() => setSelectedPayment("wallet")}
-                    className={cn(
-                      "p-2 rounded-md border transition-all flex flex-col items-center gap-1",
-                      selectedPayment === "wallet"
-                        ? "border-emerald-500 bg-emerald-500/20"
-                        : "border-gray-600 bg-gray-700/30 hover:border-gray-500",
-                    )}
-                  >
-                    <Wallet className="w-5 h-5 text-emerald-400" />
-                    <span className="text-[9px] text-gray-300">Wallet</span>
-                    {user && <span className="text-[8px] text-emerald-400">${walletBalance.toFixed(2)}</span>}
-                  </button>
-
-                  {paymentMethods.slice(0, 3).map((method) => (
+                  {/* Payment Methods Grid */}
+                  <div className="grid grid-cols-4 gap-2 mb-4">
+                    {/* Wallet Option */}
                     <button
-                      key={method.id}
-                      onClick={() => setSelectedPayment(method.id)}
+                      onClick={() => setSelectedPayment("wallet")}
                       className={cn(
                         "p-2 rounded-md border transition-all flex flex-col items-center gap-1",
-                        selectedPayment === method.id
-                          ? "border-amber-500 bg-amber-500/20"
+                        selectedPayment === "wallet"
+                          ? "border-emerald-500 bg-emerald-500/20"
                           : "border-gray-600 bg-gray-700/30 hover:border-gray-500",
                       )}
                     >
-                      {method.icon.startsWith("http") ? (
-                        <img src={method.icon} alt={method.name} className="w-5 h-5 rounded object-cover" />
-                      ) : (
-                        <span className="text-lg">{method.icon}</span>
-                      )}
-                      <span className="text-[9px] text-gray-300 line-clamp-1">{method.name}</span>
+                      <Wallet className="w-5 h-5 text-emerald-400" />
+                      <span className="text-[9px] text-gray-300">Wallet</span>
+                      {user && <span className="text-[8px] text-emerald-400">${walletBalance.toFixed(2)}</span>}
                     </button>
-                  ))}
-                </div>
 
-                {/* Terms checkbox */}
-                <label className="flex items-start gap-2 mb-4 cursor-pointer">
-                  <button
-                    onClick={() => setAgreedToTerms(!agreedToTerms)}
-                    className={cn(
-                      "w-4 h-4 rounded border flex items-center justify-center transition-all flex-shrink-0 mt-0.5",
-                      agreedToTerms ? "bg-amber-500 border-amber-500" : "border-gray-500",
-                    )}
-                  >
-                    {agreedToTerms && <CheckCircle className="w-3 h-3 text-white" />}
-                  </button>
-                  <span className="text-xs text-gray-300">
-                    By clicking the Pay Now button, you agree to our{" "}
-                    <span className="text-amber-400 hover:underline cursor-pointer">Terms and Conditions</span>.
-                  </span>
-                </label>
-
-                {/* Total and Pay Now */}
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs text-gray-400">Total:</p>
-                    <p className="text-2xl font-bold text-white">${selectedPkg?.price.toFixed(2) || "0.00"}</p>
+                    {paymentMethods.slice(0, 3).map((method) => (
+                      <button
+                        key={method.id}
+                        onClick={() => setSelectedPayment(method.id)}
+                        className={cn(
+                          "p-2 rounded-md border transition-all flex flex-col items-center gap-1",
+                          selectedPayment === method.id
+                            ? "border-amber-500 bg-amber-500/20"
+                            : "border-gray-600 bg-gray-700/30 hover:border-gray-500",
+                        )}
+                      >
+                        {method.icon.startsWith("http") ? (
+                          <img src={method.icon} alt={method.name} className="w-5 h-5 rounded object-cover" />
+                        ) : (
+                          <span className="text-lg">{method.icon}</span>
+                        )}
+                        <span className="text-[9px] text-gray-300 line-clamp-1">{method.name}</span>
+                      </button>
+                    ))}
                   </div>
-                  <Button
-                    onClick={handleSubmit}
-                    disabled={isSubmitting || !agreedToTerms || !selectedPackage || !selectedPayment || !verifiedUser}
-                    className="px-6 py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold rounded-full disabled:opacity-50"
-                  >
-                    {isSubmitting ? (
-                      <span className="flex items-center gap-2">
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        Processing...
-                      </span>
-                    ) : (
-                      <span className="flex items-center gap-2">Pay Now</span>
-                    )}
-                  </Button>
+
+                  {/* Terms checkbox */}
+                  <label className="flex items-start gap-2 mb-4 cursor-pointer">
+                    <button
+                      onClick={() => setAgreedToTerms(!agreedToTerms)}
+                      className={cn(
+                        "w-4 h-4 rounded border flex items-center justify-center transition-all flex-shrink-0 mt-0.5",
+                        agreedToTerms ? "bg-amber-500 border-amber-500" : "border-gray-500",
+                      )}
+                    >
+                      {agreedToTerms && <CheckCircle className="w-3 h-3 text-white" />}
+                    </button>
+                    <span className="text-xs text-gray-300">
+                      By clicking the Pay Now button, you agree to our{" "}
+                      <span className="text-amber-400 hover:underline cursor-pointer">Terms and Conditions</span>.
+                    </span>
+                  </label>
+
+                  {/* Total and Pay Now */}
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs text-gray-400">Total:</p>
+                      <p className="text-2xl font-bold text-white">${selectedPkg?.price.toFixed(2) || "0.00"}</p>
+                    </div>
+                    <Button
+                      onClick={handleSubmit}
+                      disabled={isSubmitting || !agreedToTerms || !selectedPackage || !selectedPayment || !verifiedUser}
+                      className="px-6 py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold rounded-full disabled:opacity-50"
+                    >
+                      {isSubmitting ? (
+                        <span className="flex items-center gap-2">
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Processing...
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-2">Pay Now</span>
+                      )}
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
