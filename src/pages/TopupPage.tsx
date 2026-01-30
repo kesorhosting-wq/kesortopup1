@@ -531,12 +531,12 @@ const TopupPage: React.FC = () => {
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
                       <Gift className="w-5 h-5 text-amber-400" />
-                      <span className="text-amber-400 font-bold">Featured Bundles</span>
+                      <span className="text-amber-400 font-bold">Best Selling</span>
                     </div>
-                    <span className="text-xs text-gray-400">{game.specialPackages.length}</span>
+                    <span className="text-xs text-gray-400 flex items-center gap-1"><Sparkles className="w-3 h-3" />{game.specialPackages.length}</span>
                   </div>
 
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-3">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3">
                     {[...game.specialPackages]
                       .sort((a, b) => a.price - b.price)
                       .map((pkg) => (
@@ -555,11 +555,11 @@ const TopupPage: React.FC = () => {
               {/* More Bundles / Regular Packages */}
               <div className="p-4 rounded-lg border border-border/20 bg-card/30 backdrop-blur-sm">
                 <div className="flex items-center justify-between mb-4">
-                  <span className="text-amber-400 font-bold">More Bundles</span>
-                  <span className="text-xs text-gray-400">{game.packages.length} bundles</span>
+                  <span className="text-amber-400 font-bold">Best Selling</span>
+                  <span className="text-xs text-gray-400 flex items-center gap-1"><Sparkles className="w-3 h-3" />{game.packages.length}</span>
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3">
                   {[...game.packages]
                     .sort((a, b) => a.price - b.price)
                     .map((pkg) => (
