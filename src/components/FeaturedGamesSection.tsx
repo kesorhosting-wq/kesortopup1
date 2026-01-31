@@ -13,8 +13,8 @@ const FeaturedGamesSection: React.FC<FeaturedGamesSectionProps> = ({ games }) =>
   const { t } = useLanguage();
   const { settings } = useSite();
   
-  // Filter games marked as featured by admin
-  const featuredGames = games.filter(game => game.featured).slice(0, 8);
+  // Filter games marked as featured by admin - show all featured games
+  const featuredGames = games.filter(game => game.featured);
   
   if (featuredGames.length === 0) return null;
   
