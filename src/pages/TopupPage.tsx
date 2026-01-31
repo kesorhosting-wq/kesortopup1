@@ -15,6 +15,7 @@ import {
   Gift,
 } from "lucide-react";
 import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 import ModernPackageCard from "@/components/ModernPackageCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -787,6 +788,8 @@ const TopupPage: React.FC = () => {
           </div>
         </div>
       </div>
+      
+      <Footer />
     </>
   );
 };
