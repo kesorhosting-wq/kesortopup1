@@ -6,6 +6,7 @@ import { handleApiError } from '@/lib/errorHandler';
 export interface Game {
   id: string;
   name: string;
+  slug?: string;
   image: string;
   coverImage?: string;
   packages: Package[];
@@ -392,6 +393,7 @@ export const SiteProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         const gamesWithPackages: Game[] = gamesData.map(game => ({
           id: game.id,
           name: game.name,
+          slug: (game as any).slug || game.id,
           image: game.image || '',
           coverImage: (game as any).cover_image || undefined,
           g2bulkCategoryId: (game as any).g2bulk_category_id || undefined,
@@ -455,6 +457,7 @@ export const SiteProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         const gamesWithPackages: Game[] = gamesData.map(game => ({
           id: game.id,
           name: game.name,
+          slug: (game as any).slug || undefined,
           image: game.image || '',
           coverImage: (game as any).cover_image || undefined,
           g2bulkCategoryId: (game as any).g2bulk_category_id || undefined,
@@ -538,6 +541,7 @@ export const SiteProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setGames(prev => [...prev, { 
           ...data, 
           id: data.id, 
+          slug: (data as any).slug || undefined,
           g2bulkCategoryId: (data as any).g2bulk_category_id || undefined,
           packages: [], 
           specialPackages: [] 
