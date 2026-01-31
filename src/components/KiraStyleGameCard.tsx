@@ -10,7 +10,7 @@ interface KiraStyleGameCardProps {
 const KiraStyleGameCard: React.FC<KiraStyleGameCardProps> = ({ game }) => {
   return (
     <Link 
-      to={`/topup/${game.id}`} 
+      to={`/topup/${game.slug || game.id}`} 
       className="group relative block rounded-xl overflow-hidden bg-card/80 border border-border/30 hover:border-gold/50 transition-all duration-300 hover:shadow-lg hover:shadow-gold/10"
     >
       {/* Game Image - Square 1:1 aspect ratio */}

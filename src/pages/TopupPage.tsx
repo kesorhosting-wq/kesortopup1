@@ -42,7 +42,7 @@ interface GameVerificationConfig {
 }
 
 const TopupPage: React.FC = () => {
-  const { gameId } = useParams();
+  const { gameSlug } = useParams();
   const navigate = useNavigate();
   const { games, paymentMethods, settings, isLoading } = useSite();
   const { addToCart } = useCart();
@@ -50,9 +50,9 @@ const TopupPage: React.FC = () => {
 
   useFavicon(settings.siteIcon);
 
-  const game = games.find((g) => g.id === gameId);
+  const game = games.find((g) => g.slug === gameSlug || g.id === gameSlug);
 
-  const { cachedUserId, cachedServerId, saveToCache, hasCachedData } = useGameIdCache(gameId);
+  const { cachedUserId, cachedServerId, saveToCache, hasCachedData } = useGameIdCache(game?.id);
 
   const [userId, setUserId] = useState("");
   const [serverId, setServerId] = useState("");
