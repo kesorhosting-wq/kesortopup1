@@ -34,6 +34,7 @@ import { useG2BulkProductStatus } from '@/hooks/useG2BulkProductStatus';
 import { AdminWalletTab } from '@/components/admin/AdminWalletTab';
 import DataExportTab from '@/components/admin/DataExportTab';
 import FontUploadSettings from '@/components/admin/FontUploadSettings';
+import ThemeSelector from '@/components/admin/ThemeSelector';
 
 const AdminPage: React.FC = () => {
   const { user, signOut } = useAuth();
@@ -477,8 +478,13 @@ const AdminPage: React.FC = () => {
                     </div>
                   </div>
                   
+                  {/* Theme Presets */}
                   <div className="pt-4 border-t border-border">
-                    <h3 className="font-bold mb-4">Colors</h3>
+                    <ThemeSelector />
+                  </div>
+                  
+                  <div className="pt-4 border-t border-border">
+                    <h3 className="font-bold mb-4">Custom Colors</h3>
                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                       <div>
                         <label className="text-sm font-medium mb-2 block">Primary Color</label>
