@@ -34,7 +34,7 @@ import { useG2BulkProductStatus } from '@/hooks/useG2BulkProductStatus';
 import { AdminWalletTab } from '@/components/admin/AdminWalletTab';
 import DataExportTab from '@/components/admin/DataExportTab';
 import FontUploadSettings from '@/components/admin/FontUploadSettings';
-import ThemeSelector from '@/components/admin/ThemeSelector';
+import ThemeTab from '@/components/admin/ThemeTab';
 
 const AdminPage: React.FC = () => {
   const { user, signOut } = useAuth();
@@ -298,10 +298,14 @@ const AdminPage: React.FC = () => {
         
         <div className="container mx-auto px-4 py-6">
           <Tabs defaultValue="settings" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-10 bg-card border border-border">
+            <TabsList className="grid w-full grid-cols-11 bg-card border border-border">
               <TabsTrigger value="settings" className="data-[state=active]:bg-gold data-[state=active]:text-primary-foreground text-xs sm:text-sm">
                 <Settings className="w-4 h-4 sm:mr-2" />
                 <span className="hidden sm:inline">Site</span>
+              </TabsTrigger>
+              <TabsTrigger value="theme" className="data-[state=active]:bg-gold data-[state=active]:text-primary-foreground text-xs sm:text-sm">
+                <Palette className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">Theme</span>
               </TabsTrigger>
               <TabsTrigger value="home-edit" className="data-[state=active]:bg-gold data-[state=active]:text-primary-foreground text-xs sm:text-sm">
                 <Home className="w-4 h-4 sm:mr-2" />
@@ -478,80 +482,6 @@ const AdminPage: React.FC = () => {
                     </div>
                   </div>
                   
-                  {/* Theme Presets */}
-                  <div className="pt-4 border-t border-border">
-                    <ThemeSelector />
-                  </div>
-                  
-                  <div className="pt-4 border-t border-border">
-                    <h3 className="font-bold mb-4">Custom Colors</h3>
-                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                      <div>
-                        <label className="text-sm font-medium mb-2 block">Primary Color</label>
-                        <div className="flex gap-2">
-                          <input 
-                            type="color" 
-                            value={settings.primaryColor}
-                            onChange={(e) => handleUpdateSettings('primaryColor', e.target.value)}
-                            className="w-12 h-10 rounded cursor-pointer"
-                          />
-                          <Input 
-                            value={settings.primaryColor}
-                            onChange={(e) => handleUpdateSettings('primaryColor', e.target.value)}
-                            className="flex-1 border-gold/50"
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium mb-2 block">Accent Color</label>
-                        <div className="flex gap-2">
-                          <input 
-                            type="color" 
-                            value={settings.accentColor}
-                            onChange={(e) => handleUpdateSettings('accentColor', e.target.value)}
-                            className="w-12 h-10 rounded cursor-pointer"
-                          />
-                          <Input 
-                            value={settings.accentColor}
-                            onChange={(e) => handleUpdateSettings('accentColor', e.target.value)}
-                            className="flex-1 border-gold/50"
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium mb-2 block">Secondary Color</label>
-                        <div className="flex gap-2">
-                          <input 
-                            type="color" 
-                            value={settings.secondaryColor || '#9b7bb8'}
-                            onChange={(e) => handleUpdateSettings('secondaryColor', e.target.value)}
-                            className="w-12 h-10 rounded cursor-pointer"
-                          />
-                          <Input 
-                            value={settings.secondaryColor || '#9b7bb8'}
-                            onChange={(e) => handleUpdateSettings('secondaryColor', e.target.value)}
-                            className="flex-1 border-gold/50"
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium mb-2 block">Background Color</label>
-                        <div className="flex gap-2">
-                          <input 
-                            type="color" 
-                            value={settings.backgroundColor}
-                            onChange={(e) => handleUpdateSettings('backgroundColor', e.target.value)}
-                            className="w-12 h-10 rounded cursor-pointer"
-                          />
-                          <Input 
-                            value={settings.backgroundColor}
-                            onChange={(e) => handleUpdateSettings('backgroundColor', e.target.value)}
-                            className="flex-1 border-gold/50"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
                 </CardContent>
               </Card>
 
@@ -561,6 +491,11 @@ const AdminPage: React.FC = () => {
                 customFontEnglish={settings.customFontEnglish}
                 onUpdate={handleUpdateSettings}
               />
+            </TabsContent>
+
+            {/* Theme Tab */}
+            <TabsContent value="theme">
+              <ThemeTab />
             </TabsContent>
 
             {/* Home Edit */}
