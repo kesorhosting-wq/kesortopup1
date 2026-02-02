@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { Package } from '@/contexts/SiteContext';
 import { useSite } from '@/contexts/SiteContext';
@@ -9,17 +9,30 @@ interface ModernPackageCardProps {
   selected: boolean;
   onSelect: () => void;
   variant?: 'default' | 'featured';
+  gameDefaultIcon?: string;
 }
 
 const ModernPackageCard: React.FC<ModernPackageCardProps> = ({ 
   pkg, 
   selected, 
   onSelect,
-  variant = 'default'
+  variant = 'default',
+  gameDefaultIcon
 }) => {
   const { settings } = useSite();
+  const [imgError, setImgError] = useState(false);
   
   const isFeatured = variant === 'featured';
+  
+  // Priority: pkg.icon > gameDefaultIcon > settings.packageIconUrl > fallback emoji
+  const getIconSrc = () => {
+    if (pkg.icon && !imgError) return pkg.icon;
+    if (gameDefaultIcon) return gameDefaultIcon;
+    if (settings.packageIconUrl) return settings.packageIconUrl;
+    return null;
+  };
+  
+  const iconSrc = getIconSrc();
   
   return (
     <button
@@ -52,7 +65,7 @@ const ModernPackageCard: React.FC<ModernPackageCardProps> = ({
           >
             <div className="flex items-center gap-0.5">
               {pkg.labelIcon && (
-                <img src={pkg.labelIcon} alt="" className="w-2.5 h-2.5 object-contain" />
+                <img src={pkg.labelIcon} alt="" className="w-2.5 h-2.5 object-contain" loading="lazy" />
               )}
               <span 
                 className="text-[8px] font-bold uppercase tracking-wide"
@@ -91,19 +104,15 @@ const ModernPackageCard: React.FC<ModernPackageCardProps> = ({
             </div>
           </div>
           
-          {/* Right side - Icon */}
+          {/* Right side - Icon with lazy loading */}
           <div className="flex-shrink-0">
-            {pkg.icon ? (
+            {iconSrc ? (
               <img 
-                src={pkg.icon} 
+                src={iconSrc} 
                 alt="" 
                 className="w-10 h-10 sm:w-12 sm:h-12 object-contain transition-transform duration-300 group-hover:scale-110"
-              />
-            ) : settings.packageIconUrl ? (
-              <img 
-                src={settings.packageIconUrl} 
-                alt="" 
-                className="w-10 h-10 sm:w-12 sm:h-12 object-contain transition-transform duration-300 group-hover:scale-110"
+                loading="lazy"
+                onError={() => setImgError(true)}
               />
             ) : (
               <span className="text-2xl sm:text-3xl transition-transform duration-300 group-hover:scale-110 inline-block">

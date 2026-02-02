@@ -484,7 +484,7 @@ const TopupPage: React.FC = () => {
     });
 
     toast({ title: "✓ បានបន្ថែមទៅកន្ត្រក!", description: `${pkg.name} សម្រាប់ ${verifiedUser.username}` });
-    navigate("/cart");
+    navigate("/checkout");
   };
 
   const selectedPkg = selectedPackage
@@ -547,6 +547,7 @@ const TopupPage: React.FC = () => {
                           selected={selectedPackage === pkg.id}
                           onSelect={() => setSelectedPackage(pkg.id)}
                           variant="featured"
+                          gameDefaultIcon={game.defaultPackageIcon}
                         />
                       ))}
                   </div>
@@ -569,6 +570,7 @@ const TopupPage: React.FC = () => {
                         pkg={pkg}
                         selected={selectedPackage === pkg.id}
                         onSelect={() => setSelectedPackage(pkg.id)}
+                        gameDefaultIcon={game.defaultPackageIcon}
                       />
                     ))}
                 </div>

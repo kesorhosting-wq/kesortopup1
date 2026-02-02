@@ -72,8 +72,8 @@ const AdminPage: React.FC = () => {
   // Game state
   const [editingGame, setEditingGame] = useState<string | null>(null);
   const [gameSearchQuery, setGameSearchQuery] = useState('');
-  const [newGame, setNewGame] = useState({ name: '', image: '', coverImage: '', g2bulkCategoryId: '', featured: false });
-  const [editGameData, setEditGameData] = useState<{ name: string; image: string; coverImage: string; g2bulkCategoryId: string; featured: boolean }>({ name: '', image: '', coverImage: '', g2bulkCategoryId: '', featured: false });
+  const [newGame, setNewGame] = useState({ name: '', image: '', coverImage: '', g2bulkCategoryId: '', featured: false, defaultPackageIcon: '' });
+  const [editGameData, setEditGameData] = useState<{ name: string; image: string; coverImage: string; g2bulkCategoryId: string; featured: boolean; defaultPackageIcon: string }>({ name: '', image: '', coverImage: '', g2bulkCategoryId: '', featured: false, defaultPackageIcon: '' });
   
   // Filter games based on search query
   const filteredGames = games.filter(game => 
@@ -108,8 +108,8 @@ const AdminPage: React.FC = () => {
       return;
     }
     
-    await addGame({ name: newGame.name, image: newGame.image, coverImage: newGame.coverImage || undefined, g2bulkCategoryId: newGame.g2bulkCategoryId || undefined, featured: newGame.featured });
-    setNewGame({ name: '', image: '', coverImage: '', g2bulkCategoryId: '', featured: false });
+    await addGame({ name: newGame.name, image: newGame.image, coverImage: newGame.coverImage || undefined, g2bulkCategoryId: newGame.g2bulkCategoryId || undefined, featured: newGame.featured, defaultPackageIcon: newGame.defaultPackageIcon || undefined });
+    setNewGame({ name: '', image: '', coverImage: '', g2bulkCategoryId: '', featured: false, defaultPackageIcon: '' });
     toast({ title: "Game added!" });
   };
 
@@ -120,7 +120,8 @@ const AdminPage: React.FC = () => {
       image: game.image,
       coverImage: game.coverImage || '',
       g2bulkCategoryId: (game as Game & { g2bulkCategoryId?: string }).g2bulkCategoryId || '',
-      featured: game.featured || false
+      featured: game.featured || false,
+      defaultPackageIcon: game.defaultPackageIcon || ''
     });
   };
 
@@ -130,7 +131,8 @@ const AdminPage: React.FC = () => {
       image: editGameData.image,
       coverImage: editGameData.coverImage || undefined,
       g2bulkCategoryId: editGameData.g2bulkCategoryId || undefined,
-      featured: editGameData.featured
+      featured: editGameData.featured,
+      defaultPackageIcon: editGameData.defaultPackageIcon || undefined
     });
     setEditingGame(null);
     toast({ title: "Game updated!" });
@@ -528,7 +530,7 @@ const AdminPage: React.FC = () => {
                         value={settings.browserTitle}
                         onChange={(e) => handleUpdateSettings('browserTitle', e.target.value)}
                         className="border-gold/50"
-                        placeholder="KESOR TOPUP - Game Topup Cambodia"
+                        placeholder="Xavier Topup - Game Topup Cambodia"
                       />
                       <p className="text-xs text-muted-foreground mt-1">Text shown in browser tab</p>
                     </div>
@@ -1700,6 +1702,15 @@ const AdminPage: React.FC = () => {
                                 folder="game-covers"
                                 aspectRatio="wide"
                                 placeholder="Cover"
+                              />
+                            </div>
+                            <div className="w-24">
+                              <label className="text-xs text-muted-foreground mb-1 block">Default Pkg Icon</label>
+                              <ImageUpload
+                                value={editGameData.defaultPackageIcon}
+                                onChange={(url) => setEditGameData(prev => ({ ...prev, defaultPackageIcon: url }))}
+                                folder="package-icons"
+                                placeholder="💎"
                               />
                             </div>
                             <div className="flex-1 min-w-[150px]">
