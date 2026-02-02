@@ -67,7 +67,7 @@ const CheckoutPage = () => {
           player_name: firstItem.playerName,
           amount: getTotal(),
           currency: settings.packageCurrency || 'USD',
-          payment_method: 'Kesor KHQR',
+          payment_method: 'Xavier KHQR',
           g2bulk_product_id: firstItem.g2bulkProductId || null,
         },
       });
@@ -257,7 +257,7 @@ const CheckoutPage = () => {
 
                 {/* Payment Method Info */}
                 <div className="p-3 rounded-lg bg-primary/10 border border-primary/20">
-                  <p className="text-sm font-medium">វិធីបង់ប្រាក់: Kesor KHQR</p>
+                  <p className="text-sm font-medium">វិធីបង់ប្រាក់: Xavier KHQR</p>
                   <p className="text-xs text-muted-foreground">ស្កេន QR ជាមួយកម្មវិធី Bakong ឬធនាគារ</p>
                 </div>
               </CardContent>
@@ -292,7 +292,7 @@ const CheckoutPage = () => {
                   description={`${items.length} កញ្ចប់`}
                   onCancel={handleCancelPayment}
                   onComplete={handlePaymentComplete}
-                  paymentMethod="Kesor KHQR"
+                  paymentMethod="Xavier KHQR"
                   wsUrl={generatedQR.wsUrl}
                 />
               ) : !isIkhodeConfigured ? (
@@ -300,7 +300,7 @@ const CheckoutPage = () => {
                   <CardContent className="py-8 text-center">
                     <CreditCard className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
                     <p className="text-muted-foreground mb-4">
-                      Kesor KHQR មិនទាន់បានកំណត់។ សូមទាក់ទងអ្នកគ្រប់គ្រង។
+                      Xavier KHQR មិនទាន់បានកំណត់។ សូមទាក់ទងអ្នកគ្រប់គ្រង។
                     </p>
                   </CardContent>
                 </Card>

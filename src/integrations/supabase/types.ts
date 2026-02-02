@@ -138,6 +138,7 @@ export type Database = {
         Row: {
           cover_image: string | null
           created_at: string
+          default_package_icon: string | null
           description: string | null
           featured: boolean | null
           g2bulk_category_id: string | null
@@ -151,6 +152,7 @@ export type Database = {
         Insert: {
           cover_image?: string | null
           created_at?: string
+          default_package_icon?: string | null
           description?: string | null
           featured?: boolean | null
           g2bulk_category_id?: string | null
@@ -164,6 +166,7 @@ export type Database = {
         Update: {
           cover_image?: string | null
           created_at?: string
+          default_package_icon?: string | null
           description?: string | null
           featured?: boolean | null
           g2bulk_category_id?: string | null

@@ -139,7 +139,7 @@ const WalletPage: React.FC = () => {
           orderId: walletOrderId,
           playerName: user?.email?.split('@')[0] || 'Customer',
           gameName: 'Wallet Top-up',
-          email: user?.email || 'customer@kesor.com'
+          email: user?.email || 'customer@xavier.com'
         }
       });
 
@@ -212,7 +212,7 @@ const WalletPage: React.FC = () => {
           <div className="text-center py-6">
             <div className="flex items-center justify-center gap-2 mb-2">
               <Wallet className="w-8 h-8 text-gold" />
-              <h1 className="font-display text-2xl gold-text">Kesor TP Wallet</h1>
+              <h1 className="font-display text-2xl gold-text">Xavier Wallet</h1>
             </div>
             <div className="text-4xl font-bold text-foreground mb-1">
               ${balance.toFixed(2)}

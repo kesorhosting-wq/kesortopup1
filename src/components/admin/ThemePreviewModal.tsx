@@ -48,7 +48,7 @@ const ThemePreviewModal: React.FC<ThemePreviewModalProps> = ({
           >
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-white/20" />
-              <span className="text-white font-bold text-lg">KesorTopup</span>
+              <span className="text-white font-bold text-lg">XavierTopup</span>
             </div>
             <div className="flex gap-2">
               <div className="px-4 py-2 rounded-lg bg-white/10 text-white text-sm">Home</div>
@@ -155,7 +155,7 @@ const ThemePreviewModal: React.FC<ThemePreviewModalProps> = ({
             className="p-6 text-center text-white"
             style={{ backgroundColor: colors.primaryColor }}
           >
-            <p className="text-sm opacity-80">© 2024 KesorTopup. All rights reserved.</p>
+            <p className="text-sm opacity-80">© 2024 XavierTopup. All rights reserved.</p>
             <div className="flex justify-center gap-4 mt-2">
               <span className="text-xs opacity-60">Terms</span>
               <span className="text-xs opacity-60">Privacy</span>

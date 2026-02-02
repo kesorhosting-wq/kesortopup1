@@ -13,6 +13,7 @@ export interface Game {
   specialPackages: Package[];
   g2bulkCategoryId?: string;
   featured?: boolean;
+  defaultPackageIcon?: string;
 }
 
 export interface Package {
@@ -167,7 +168,7 @@ interface SiteContextType {
 }
 
 const defaultSettings: SiteSettings = {
-  siteName: 'KESOR TOPUP',
+  siteName: 'Xavier Topup',
   logoUrl: '',
   logoSize: 64,
   logoMobilePosition: 50,
@@ -182,7 +183,7 @@ const defaultSettings: SiteSettings = {
   secondaryColor: '#9b7bb8',
   // Browser settings
   siteIcon: '',
-  browserTitle: 'KESOR TOPUP - Game Topup Cambodia',
+  browserTitle: 'Xavier Topup - Game Topup Cambodia',
   // Home Edit defaults
   backgroundImage: '',
   headerImage: '',
@@ -398,6 +399,7 @@ export const SiteProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           coverImage: (game as any).cover_image || undefined,
           g2bulkCategoryId: (game as any).g2bulk_category_id || undefined,
           featured: (game as any).featured || false,
+          defaultPackageIcon: (game as any).default_package_icon || undefined,
           packages: (packagesData || [])
             .filter(pkg => pkg.game_id === game.id)
             .map(pkg => ({
@@ -462,6 +464,7 @@ export const SiteProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           coverImage: (game as any).cover_image || undefined,
           g2bulkCategoryId: (game as any).g2bulk_category_id || undefined,
           featured: (game as any).featured || false,
+          defaultPackageIcon: (game as any).default_package_icon || undefined,
           packages: (packagesData || [])
             .filter(pkg => pkg.game_id === game.id)
             .map(pkg => ({
@@ -560,6 +563,7 @@ export const SiteProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (updatedGame.coverImage !== undefined) updateData.cover_image = updatedGame.coverImage || null;
       if (updatedGame.g2bulkCategoryId !== undefined) updateData.g2bulk_category_id = updatedGame.g2bulkCategoryId || null;
       if (updatedGame.featured !== undefined) updateData.featured = updatedGame.featured;
+      if (updatedGame.defaultPackageIcon !== undefined) updateData.default_package_icon = updatedGame.defaultPackageIcon || null;
 
       const { error } = await supabase
         .from('games')
